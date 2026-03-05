@@ -1,0 +1,25 @@
+# Java / Maven
+target/
+*.class
+*.jar
+
+# Spring secrets
+assetra-backend/src/main/resources/application.properties
+assetra-backend/uploads/
+
+# Node
+node_modules/
+dist/
+
+# Env secrets
+.env
+.env.local
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
