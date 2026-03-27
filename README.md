@@ -1,12 +1,22 @@
 # 🏢 Assetra – Smart Campus Asset & Facility Management System
 
-![Spring Boot](https://img.shields.io/badge/SpringBoot-Backend-green)
-![React](https://img.shields.io/badge/React-Frontend-blue)
-![MySQL](https://img.shields.io/badge/Database-MySQL-orange)
-![GitHub Actions](https://img.shields.io/badge/CI-CD-GitHubActions-black)
-
-
-Spring Boot • React • REST API • MySQL • Tailwind CSS • OAuth 2.0
+[![Spring Boot](https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+[![Spring Security](https://img.shields.io/badge/SpringSecurity-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white)](https://spring.io/projects/spring-security)
+[![Hibernate](https://img.shields.io/badge/Hibernate-59666C?style=for-the-badge&logo=hibernate&logoColor=white)](https://hibernate.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-38BDF8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![REST API](https://img.shields.io/badge/API-REST-ff6f00?style=for-the-badge)]()
+[![OAuth2](https://img.shields.io/badge/Auth-OAuth2-3C8DBC?style=for-the-badge)]()
+[![JWT](https://img.shields.io/badge/Auth-JWT-black?style=for-the-badge&logo=jsonwebtokens)]()
+[![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)](https://git-scm.com/)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/)
+[![GitHub Actions](https://img.shields.io/badge/GitHubActions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/features/actions)
+[![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white)](https://www.postman.com/)
+[![VS Code](https://img.shields.io/badge/VSCode-0078d7?style=for-the-badge&logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
 
 ---
 
@@ -22,26 +32,10 @@ Assetra follows a **modern layered architecture** with a Spring Boot REST API an
 
 ## 🛠 Tech Stack
 
-### 🔹 Backend
-- Java
-- Spring Boot (REST API)
-- Spring Security (OAuth 2.0)
-- Hibernate / JPA
-
-### 🔹 Frontend
-- React.js
-- JavaScript
-- Tailwind CSS
-- Vite
-
-### 🔹 Database
-- PostgreSQL
-
-### 🔹 Tools
-- Git & GitHub
-- GitHub Actions (CI/CD)
-- Postman / Thunder Client
-- VS Code 
+- **Backend :** Java, Spring Boot (REST API), Spring Security (OAuth 2.0), Hibernate / JPA
+- **Frontend :** React.js, JavaScript, Tailwind CSS, Vite
+- **Database :** PostgreSQL
+- **Tools :**  Git & GitHub, GitHub Actions (CI/CD), Postman / Thunder Client, VS Code 
 
 ---
 
@@ -99,17 +93,22 @@ Make sure you have installed:
 
 - Java JDK 17+
 - Node.js (v18 or above)
-- MySQL Server
 - Git
-- VS Code 
+- VS Code / IntelliJ
+
+### 🗄 Database Setup (PostgreSQL - Neon)
+
+- Create a free account at https://neon.tech
+- Create a new PostgreSQL database
+- Copy your connection string
 
 ---
 
 ## 🔽 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/assetra.git
-cd assetra
+git clone https://github.com/ShazminaOudeen/it3030-paf-2026-smart-campus-group07.git
+cd it3030-paf-2026-smart-campus-group07
 ```
 
 ---
@@ -117,7 +116,7 @@ cd assetra
 ## ⚙️ 2️⃣ Backend Setup (Spring Boot)
 
 ```bash
-cd backend
+cd assetra-backend
 ```
 
 ### 📦 Install Dependencies (Maven)
@@ -129,14 +128,15 @@ mvn clean install
 ### 🔐 Configure `application.properties`
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/assetra_db
-spring.datasource.username=root
+spring.datasource.url=jdbc:postgresql://<your-neon-host>/<dbname>?sslmode=require
+spring.datasource.username=your_username
 spring.datasource.password=your_password
 
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 
-server.port=8080
+server.port=8082
 ```
 
 ### ▶ Run Backend
@@ -145,7 +145,7 @@ server.port=8080
 mvn spring-boot:run
 ```
 
-Backend runs on:
+Backend runs on:  
 http://localhost:8082
 
 ---
@@ -153,12 +153,12 @@ http://localhost:8082
 ## 💻 3️⃣ Frontend Setup (React)
 
 ```bash
-cd frontend
+cd assetra-frontend
 npm install
 npm run dev
 ```
 
-Frontend runs on:
+Frontend runs on:  
 http://localhost:5173
 
 ---
@@ -172,27 +172,33 @@ http://localhost:5173
 
 ## 🧪 Testing
 
-- Postman / Thunder Client for API testing
-- Unit & Integration testing (Spring Boot)
-- Frontend testing (Playwright)
-- GitHub Actions for build & test automation
+- Postman / Thunder Client for API testing  
+- Unit & Integration testing using JUnit (Spring Boot)  
+- Frontend testing using Playwright  
+- GitHub Actions for build & test automation  
+
+---
+
+### Run Tests:
+
+```bash
+mvn test
+```
 
 ---
 
 
 ## 🎓 Project Details
 
-- **Module**: IT3030 – Programming Applications & Frameworks
-- **Academic Year**: 3rd Year – 1st Semester
-- **Assignment Type**: Group Coursework
-- **System**: Smart Campus Operations Hub
-- **Team Contributions**:
-
-
-| Member 1 | Facilities & Asset Management |
-| Member 2 | Booking System |
-| Member 3 | Maintenance & Tickets |
-| Member 4 | Notifications & Security |
+**Module**: IT3030 – Programming Applications & Frameworks
+**Academic Year**: 3rd Year – 1st Semester
+**Assignment Type**: Group Coursework
+**System**: Smart Campus Operations Hub
+**Team Contributions**:
+- Facilities & Asset Management 
+- Booking System 
+- Maintenance & Tickets 
+- Notifications & Security 
 
 ---
 
