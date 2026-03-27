@@ -190,11 +190,10 @@ mvn test
 
 ## 🎓 Project Details
 
-**Module**: IT3030 – Programming Applications & Frameworks
-**Academic Year**: 3rd Year – 1st Semester
-**Assignment Type**: Group Coursework
-**System**: Smart Campus Operations Hub
-**Team Contributions**:
+**Academic Year:** 3rd Year – 1st Semester  
+**Module:** Programming Applications and Frameworks (PAF)  
+**Team Size:** 4 Members  
+**Contribution Areas:**
 - Facilities & Asset Management 
 - Booking System 
 - Maintenance & Tickets 
