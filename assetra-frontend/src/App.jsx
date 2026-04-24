@@ -8,6 +8,10 @@ import HomePage from "./pages/HomePage";
 import AdminLayout from "./shared/components/AdminLayout";
 import AdminComingSoon from "./pages/AdminComingSoon";
 
+//user imports
+import UserLayout from "./shared/components/UserLayout";
+import UserComingSoon from "./pages/UserComingSoon";
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -44,6 +48,19 @@ export default function App() {
             <Route path="logout" element={<AdminComingSoon />} />
           </Route>
 
+          
+          <Route path="/user" element={<UserLayout />}>
+            <Route index element={<UserComingSoon />} />
+            <Route path="dashboard" element={<UserComingSoon />} />
+            <Route path="resources" element={<UserComingSoon />} />
+            <Route path="bookings/new" element={<UserComingSoon />} />
+            <Route path="bookings" element={<UserComingSoon />} />
+            <Route path="maintenance/report" element={<UserComingSoon />} />
+            <Route path="maintenance" element={<UserComingSoon />} />
+            <Route path="notifications" element={<UserComingSoon />} />
+            <Route path="account/profile" element={<UserComingSoon />} />
+            <Route path="logout" element={<UserComingSoon />} />
+        </Route>
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

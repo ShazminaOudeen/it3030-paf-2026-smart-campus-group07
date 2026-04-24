@@ -1,47 +1,40 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Building2, PlusSquare, CalendarDays,
-  ClipboardCheck, Wrench, ListChecks, UserCog, Bell,
-  LogOut, ChevronDown, ChevronRight, Cpu, ShieldCheck, Home,
+  LayoutDashboard, BookOpen, PlusSquare, CalendarDays,
+  Wrench, ClipboardList, Bell, LogOut, ChevronDown,
+  ChevronRight, Home, Layers,
 } from "lucide-react";
 import { useState } from "react";
 import logo from "../../assets/assetra_logo.png";
 
 const MENU = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/admin/dashboard" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/user/dashboard" },
   {
-    label: "Resources", icon: Building2,
+    label: "Resources", icon: Layers,
     children: [
-      { label: "All Resources", icon: Cpu, href: "/admin/resources" },
-      { label: "Add Resource", icon: PlusSquare, href: "/admin/resources/add" },
+      { label: "Browse Resources", icon: BookOpen, href: "/user/resources" },
     ],
   },
   {
     label: "Bookings", icon: CalendarDays,
     children: [
-      { label: "All Bookings", icon: ListChecks, href: "/admin/bookings" },
-      { label: "Pending Approvals", icon: ClipboardCheck, href: "/admin/bookings/pending" },
+      { label: "Make a Booking", icon: PlusSquare, href: "/user/bookings/new" },
+      { label: "My Bookings", icon: ClipboardList, href: "/user/bookings" },
     ],
   },
   {
     label: "Maintenance", icon: Wrench,
     children: [
-      { label: "All Tickets", icon: ListChecks, href: "/admin/maintenance" },
-      { label: "Assign Technician", icon: UserCog, href: "/admin/maintenance/assign" },
+      { label: "Report an Issue", icon: PlusSquare, href: "/user/maintenance/report" },
+      { label: "My Tickets", icon: ClipboardList, href: "/user/maintenance" },
     ],
   },
-  {
-    label: "Management", icon: ShieldCheck,
-    children: [
-      { label: "User Management", icon: UserCog, href: "/admin/management/users" },
-      { label: "Notifications", icon: Bell, href: "/admin/management/notifications" },
-    ],
-  },
+  { label: "Notifications", icon: Bell, href: "/user/notifications" },
 ];
 
 const BOTTOM_MENU = [
   { label: "Go to Home", icon: Home, href: "/", external: true },
-  { label: "Logout", icon: LogOut, href: "/admin/logout", danger: true },
+  { label: "Logout", icon: LogOut, href: "/user/logout", danger: true },
 ];
 
 function NavItem({ item, collapsed }) {
@@ -53,7 +46,7 @@ function NavItem({ item, collapsed }) {
       className={({ isActive }) =>
         `group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150
         ${isActive && item.href !== "/"
-          ? "text-orange-500 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10"
+          ? "text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10"
           : item.danger
           ? "text-red-400 hover:bg-red-500/10 hover:text-red-400"
           : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-800 dark:hover:text-gray-200"
@@ -69,7 +62,6 @@ function NavItem({ item, collapsed }) {
 function NavGroup({ group, collapsed }) {
   const [open, setOpen] = useState(true);
   const { pathname } = useLocation();
-
   const isGroupActive = group.children?.some((child) => pathname.startsWith(child.href));
 
   return (
@@ -80,14 +72,14 @@ function NavGroup({ group, collapsed }) {
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold
           transition-all duration-150
           ${isGroupActive
-            ? "text-orange-500 dark:text-orange-400"
+            ? "text-blue-500 dark:text-blue-400"
             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-900 dark:hover:text-white"
           }`}
       >
         <group.icon
           size={17}
           className={`shrink-0 transition-colors ${
-            isGroupActive ? "text-orange-500 dark:text-orange-400" : "text-gray-400 dark:text-gray-500"
+            isGroupActive ? "text-blue-500 dark:text-blue-400" : "text-gray-400 dark:text-gray-500"
           }`}
         />
         {!collapsed && (
@@ -112,7 +104,7 @@ function NavGroup({ group, collapsed }) {
   );
 }
 
-export default function AdminSidebar({ open, collapsed, onCollapsedChange }) {
+export default function UserSidebar({ open, collapsed, onCollapsedChange }) {
   return (
     <aside
       className={`
@@ -141,8 +133,8 @@ export default function AdminSidebar({ open, collapsed, onCollapsedChange }) {
             <p className="text-black dark:text-white font-bold text-base leading-tight truncate">
               Assetra
             </p>
-            <p className="text-orange-400 text-[10px] font-mono tracking-widest uppercase truncate">
-              Admin Panel
+            <p className="text-blue-400 text-[10px] font-mono tracking-widest uppercase truncate">
+              User Portal
             </p>
           </div>
         )}
