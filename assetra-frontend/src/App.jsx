@@ -12,6 +12,10 @@ import AdminComingSoon from "./pages/AdminComingSoon";
 import UserLayout from "./shared/components/UserLayout";
 import UserComingSoon from "./pages/UserComingSoon";
 
+//technician imports
+import TechnicianLayout from "./shared/components/TechnicianLayout";
+import TechnicianComingSoon from "./pages/TechnicianComingSoon";
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -60,6 +64,18 @@ export default function App() {
             <Route path="notifications" element={<UserComingSoon />} />
             <Route path="account/profile" element={<UserComingSoon />} />
             <Route path="logout" element={<UserComingSoon />} />
+        </Route>
+
+        <Route path="/technician" element={<TechnicianLayout />}>
+            <Route index element={<TechnicianComingSoon />} />
+            <Route path="dashboard" element={<TechnicianComingSoon />} />
+            <Route path="tickets/assigned" element={<TechnicianComingSoon />} />
+            <Route path="tickets/open" element={<TechnicianComingSoon />} />
+            <Route path="tickets/resolved" element={<TechnicianComingSoon />} />
+            <Route path="resources" element={<TechnicianComingSoon />} />
+            <Route path="notifications" element={<TechnicianComingSoon />} />
+            <Route path="account/profile" element={<TechnicianComingSoon />} />
+            <Route path="logout" element={<TechnicianComingSoon />} />
         </Route>
         </Routes>
       </BrowserRouter>
