@@ -3,6 +3,7 @@ import { ThemeProvider } from "./shared/context/ThemeContext";
 import Navbar from "./shared/components/Navbar";
 import Footer from "./shared/components/Footer";
 import HomePage from "./pages/HomePage";
+import RegisterPage from "./notification/pages/RegisterPage";
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/register" element={<RegisterPage />} />
             </Routes>
           </main>
           <Footer />
