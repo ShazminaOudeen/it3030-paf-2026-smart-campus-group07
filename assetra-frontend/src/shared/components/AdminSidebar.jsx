@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Building2, PlusSquare, CalendarDays,
   ClipboardCheck, Wrench, ListChecks, UserCog, Bell,
@@ -21,7 +21,6 @@ const MENU = [
     children: [
       { label: "All Bookings", icon: ListChecks, href: "/admin/bookings" },
       { label: "Pending Approvals", icon: ClipboardCheck, href: "/admin/bookings/pending" },
-      // ✅ badge removed from Pending Approvals
     ],
   },
   {
@@ -52,16 +51,16 @@ function NavItem({ item, collapsed }) {
       end={item.href === "/"}
       title={collapsed ? item.label : undefined}
       className={({ isActive }) =>
-        `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
+        `group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150
         ${isActive && item.href !== "/"
-          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+          ? "text-orange-500 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10"
           : item.danger
-          ? "text-red-400 hover:bg-red-500/10 hover:text-red-300"
-          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/8 dark:hover:text-white"
+          ? "text-red-400 hover:bg-red-500/10 hover:text-red-400"
+          : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-800 dark:hover:text-gray-200"
         }`
       }
     >
-      <item.icon size={17} className="shrink-0" />
+      <item.icon size={15} className="shrink-0" />
       {!collapsed && <span className="truncate flex-1">{item.label}</span>}
     </NavLink>
   );
@@ -69,31 +68,41 @@ function NavItem({ item, collapsed }) {
 
 function NavGroup({ group, collapsed }) {
   const [open, setOpen] = useState(true);
+  const { pathname } = useLocation();
+
+  const isGroupActive = group.children?.some((child) => pathname.startsWith(child.href));
 
   return (
     <div>
       <button
         onClick={() => !collapsed && setOpen((p) => !p)}
         title={collapsed ? group.label : undefined}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold
-          text-gray-700 hover:bg-gray-100 hover:text-gray-900
-          dark:text-gray-300 dark:hover:bg-white/8 dark:hover:text-white
-          transition-all duration-200"
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold
+          transition-all duration-150
+          ${isGroupActive
+            ? "text-orange-500 dark:text-orange-400"
+            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-900 dark:hover:text-white"
+          }`}
       >
-        <group.icon size={17} className="shrink-0 text-orange-500" />
+        <group.icon
+          size={17}
+          className={`shrink-0 transition-colors ${
+            isGroupActive ? "text-orange-500 dark:text-orange-400" : "text-gray-400 dark:text-gray-500"
+          }`}
+        />
         {!collapsed && (
           <>
             <span className="flex-1 text-left">{group.label}</span>
             {open
-              ? <ChevronDown size={14} className="text-gray-400 dark:text-gray-500" />
-              : <ChevronRight size={14} className="text-gray-400 dark:text-gray-500" />
+              ? <ChevronDown size={13} className="text-gray-400 dark:text-gray-600" />
+              : <ChevronRight size={13} className="text-gray-400 dark:text-gray-600" />
             }
           </>
         )}
       </button>
 
       {open && !collapsed && (
-        <div className="mt-1 ml-4 pl-3 border-l border-gray-200 dark:border-white/10 space-y-0.5">
+        <div className="mt-0.5 ml-4 pl-3 border-l border-gray-200 dark:border-white/[0.08] space-y-0.5">
           {group.children.map((child) => (
             <NavItem key={child.href} item={child} collapsed={collapsed} />
           ))}
@@ -117,18 +126,16 @@ export default function AdminSidebar({ open, collapsed, onCollapsedChange }) {
         lg:translate-x-0
       `}
     >
-      {/* Logo + Assetra heading + collapse toggle */}
+      {/* Logo + heading + collapse toggle */}
       <div className={`flex items-center px-3 py-4 border-b border-gray-200 dark:border-white/[0.06]
         ${collapsed ? "flex-col gap-3 justify-center" : "justify-between gap-3"}`}>
 
-        {/* Logo ALWAYS visible */}
         <img
           src={logo}
           alt="Assetra"
           className="h-8 w-8 object-contain shrink-0 rounded-lg"
         />
 
-        {/* Text only when expanded */}
         {!collapsed && (
           <div className="flex-1 overflow-hidden">
             <p className="text-black dark:text-white font-bold text-base leading-tight truncate">
@@ -140,22 +147,20 @@ export default function AdminSidebar({ open, collapsed, onCollapsedChange }) {
           </div>
         )}
 
-        {/* Toggle button */}
         <button
           onClick={() => onCollapsedChange((p) => !p)}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/8 transition-colors shrink-0"
+          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors shrink-0"
         >
           {collapsed
-            ? <ChevronRight size={16} className="text-gray-500 dark:text-gray-400" />
-            : <ChevronDown size={16} className="text-gray-500 dark:text-gray-400 rotate-90" />
+            ? <ChevronRight size={16} className="text-gray-400 dark:text-gray-500" />
+            : <ChevronDown size={16} className="text-gray-400 dark:text-gray-500 rotate-90" />
           }
         </button>
       </div>
 
-
-      {/* Scrollable nav — scrollbar hidden */}
+      {/* Scrollable nav */}
       <nav
-        className="flex-1 overflow-y-auto px-2 py-4 space-y-1
+        className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5
           [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         {MENU.map((item) =>
@@ -168,7 +173,7 @@ export default function AdminSidebar({ open, collapsed, onCollapsedChange }) {
       </nav>
 
       {/* Bottom items */}
-      <div className="px-2 py-4 border-t border-gray-200 dark:border-white/[0.06] space-y-0.5">
+      <div className="px-2 py-3 border-t border-gray-200 dark:border-white/[0.06] space-y-0.5">
         {BOTTOM_MENU.map((item) => (
           <NavItem key={item.href} item={item} collapsed={collapsed} />
         ))}
