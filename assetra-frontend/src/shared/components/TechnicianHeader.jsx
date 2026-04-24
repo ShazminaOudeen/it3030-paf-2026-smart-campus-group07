@@ -22,7 +22,6 @@ export default function TechnicianHeader() {
 
   return (
     <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-surface-border dark:border-white/[0.06]">
-
       <div className="flex-1 min-w-0">
         <h1 className="text-gray-900 dark:text-white font-display font-semibold text-lg leading-none truncate">
           {pageTitle}
@@ -32,7 +31,7 @@ export default function TechnicianHeader() {
         </p>
       </div>
 
-      <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-muted dark:bg-white/5 border border-surface-border dark:border-white/[0.08] w-56 text-sm text-gray-400 cursor-pointer hover:border-emerald-400/50 transition-colors">
+      <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-muted dark:bg-white/5 border border-surface-border dark:border-white/[0.08] w-56 text-sm text-gray-400 cursor-pointer hover:border-red-400/50 transition-colors">
         <Search size={14} />
         <span>Quick search…</span>
         <kbd className="ml-auto text-[10px] bg-surface-border dark:bg-white/10 rounded px-1.5 py-0.5 font-mono">⌘K</kbd>
@@ -51,14 +50,14 @@ export default function TechnicianHeader() {
       </button>
 
       <div className="flex items-center gap-2.5 pl-3 border-l border-surface-border dark:border-white/[0.08] cursor-pointer group">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-emerald-500/30">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-red-500/30">
           T
         </div>
         <div className="hidden sm:block leading-none">
           <p className="text-sm font-semibold text-gray-800 dark:text-white">Technician</p>
-          <p className="text-[10px] text-emerald-400 font-mono">TECHNICIAN</p>
+          <p className="text-[10px] text-red-400 font-mono">TECHNICIAN</p>
         </div>
-        <ChevronDown size={13} className="text-gray-400 group-hover:text-emerald-400 transition-colors" />
+        <ChevronDown size={13} className="text-gray-400 group-hover:text-red-400 transition-colors" />
       </div>
     </header>
   );

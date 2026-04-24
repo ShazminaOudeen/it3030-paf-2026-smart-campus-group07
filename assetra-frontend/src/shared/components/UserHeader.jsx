@@ -23,8 +23,6 @@ export default function UserHeader() {
 
   return (
     <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-surface-border dark:border-white/[0.06]">
-
-      {/* Page title */}
       <div className="flex-1 min-w-0">
         <h1 className="text-gray-900 dark:text-white font-display font-semibold text-lg leading-none truncate">
           {pageTitle}
@@ -34,19 +32,16 @@ export default function UserHeader() {
         </p>
       </div>
 
-      {/* Search bar — desktop only */}
-      <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-muted dark:bg-white/5 border border-surface-border dark:border-white/[0.08] w-56 text-sm text-gray-400 cursor-pointer hover:border-blue-400/50 transition-colors">
+      <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-muted dark:bg-white/5 border border-surface-border dark:border-white/[0.08] w-56 text-sm text-gray-400 cursor-pointer hover:border-amber-400/50 transition-colors">
         <Search size={14} />
         <span>Quick search…</span>
         <kbd className="ml-auto text-[10px] bg-surface-border dark:bg-white/10 rounded px-1.5 py-0.5 font-mono">⌘K</kbd>
       </div>
 
-      {/* Notification bell */}
       <button className="relative p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-surface-muted dark:hover:bg-white/8 transition-colors">
         <Bell size={19} />
       </button>
 
-      {/* Theme toggle */}
       <button
         onClick={toggleTheme}
         className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-surface-muted dark:hover:bg-white/8 transition-colors"
@@ -55,16 +50,15 @@ export default function UserHeader() {
         {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
       </button>
 
-      {/* User avatar chip */}
       <div className="flex items-center gap-2.5 pl-3 border-l border-surface-border dark:border-white/[0.08] cursor-pointer group">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-blue-500/30">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-amber-500/30">
           U
         </div>
         <div className="hidden sm:block leading-none">
           <p className="text-sm font-semibold text-gray-800 dark:text-white">User</p>
-          <p className="text-[10px] text-blue-400 font-mono">STUDENT</p>
+          <p className="text-[10px] text-amber-400 font-mono">STUDENT</p>
         </div>
-        <ChevronDown size={13} className="text-gray-400 group-hover:text-blue-400 transition-colors" />
+        <ChevronDown size={13} className="text-gray-400 group-hover:text-amber-400 transition-colors" />
       </div>
     </header>
   );

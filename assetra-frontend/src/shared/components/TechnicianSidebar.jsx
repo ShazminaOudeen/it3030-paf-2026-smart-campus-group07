@@ -40,7 +40,7 @@ function NavItem({ item, collapsed }) {
       className={({ isActive }) =>
         `group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150
         ${isActive && item.href !== "/"
-          ? "text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
+          ? "text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-500/10"
           : item.danger
           ? "text-red-400 hover:bg-red-500/10 hover:text-red-400"
           : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-800 dark:hover:text-gray-200"
@@ -66,14 +66,14 @@ function NavGroup({ group, collapsed }) {
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold
           transition-all duration-150
           ${isGroupActive
-            ? "text-emerald-500 dark:text-emerald-400"
+            ? "text-red-500 dark:text-red-400"
             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-900 dark:hover:text-white"
           }`}
       >
         <group.icon
           size={17}
           className={`shrink-0 transition-colors ${
-            isGroupActive ? "text-emerald-500 dark:text-emerald-400" : "text-gray-400 dark:text-gray-500"
+            isGroupActive ? "text-red-500 dark:text-red-400" : "text-gray-400 dark:text-gray-500"
           }`}
         />
         {!collapsed && (
@@ -118,7 +118,7 @@ export default function TechnicianSidebar({ open, collapsed, onCollapsedChange }
         {!collapsed && (
           <div className="flex-1 overflow-hidden">
             <p className="text-black dark:text-white font-bold text-base leading-tight truncate">Assetra</p>
-            <p className="text-emerald-400 text-[10px] font-mono tracking-widest uppercase truncate">Technician Portal</p>
+            <p className="text-red-400 text-[10px] font-mono tracking-widest uppercase truncate">Technician Portal</p>
           </div>
         )}
         <button

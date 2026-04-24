@@ -46,7 +46,7 @@ function NavItem({ item, collapsed }) {
       className={({ isActive }) =>
         `group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150
         ${isActive && item.href !== "/"
-          ? "text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10"
+          ? "text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10"
           : item.danger
           ? "text-red-400 hover:bg-red-500/10 hover:text-red-400"
           : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-800 dark:hover:text-gray-200"
@@ -72,14 +72,14 @@ function NavGroup({ group, collapsed }) {
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold
           transition-all duration-150
           ${isGroupActive
-            ? "text-blue-500 dark:text-blue-400"
+            ? "text-amber-500 dark:text-amber-400"
             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-900 dark:hover:text-white"
           }`}
       >
         <group.icon
           size={17}
           className={`shrink-0 transition-colors ${
-            isGroupActive ? "text-blue-500 dark:text-blue-400" : "text-gray-400 dark:text-gray-500"
+            isGroupActive ? "text-amber-500 dark:text-amber-400" : "text-gray-400 dark:text-gray-500"
           }`}
         />
         {!collapsed && (
@@ -118,27 +118,15 @@ export default function UserSidebar({ open, collapsed, onCollapsedChange }) {
         lg:translate-x-0
       `}
     >
-      {/* Logo + heading + collapse toggle */}
       <div className={`flex items-center px-3 py-4 border-b border-gray-200 dark:border-white/[0.06]
         ${collapsed ? "flex-col gap-3 justify-center" : "justify-between gap-3"}`}>
-
-        <img
-          src={logo}
-          alt="Assetra"
-          className="h-8 w-8 object-contain shrink-0 rounded-lg"
-        />
-
+        <img src={logo} alt="Assetra" className="h-8 w-8 object-contain shrink-0 rounded-lg" />
         {!collapsed && (
           <div className="flex-1 overflow-hidden">
-            <p className="text-black dark:text-white font-bold text-base leading-tight truncate">
-              Assetra
-            </p>
-            <p className="text-blue-400 text-[10px] font-mono tracking-widest uppercase truncate">
-              User Portal
-            </p>
+            <p className="text-black dark:text-white font-bold text-base leading-tight truncate">Assetra</p>
+            <p className="text-amber-400 text-[10px] font-mono tracking-widest uppercase truncate">User Portal</p>
           </div>
         )}
-
         <button
           onClick={() => onCollapsedChange((p) => !p)}
           className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors shrink-0"
@@ -150,11 +138,8 @@ export default function UserSidebar({ open, collapsed, onCollapsedChange }) {
         </button>
       </div>
 
-      {/* Scrollable nav */}
-      <nav
-        className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5
-          [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-      >
+      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5
+        [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {MENU.map((item) =>
           item.children ? (
             <NavGroup key={item.label} group={item} collapsed={collapsed} />
@@ -164,19 +149,15 @@ export default function UserSidebar({ open, collapsed, onCollapsedChange }) {
         )}
       </nav>
 
-      {/* Bottom items */}
       <div className="px-2 py-3 border-t border-gray-200 dark:border-white/[0.06] space-y-0.5">
         {BOTTOM_MENU.map((item) => (
           <NavItem key={item.href} item={item} collapsed={collapsed} />
         ))}
       </div>
 
-      {/* Version tag */}
       {!collapsed && (
         <div className="px-5 py-3 border-t border-gray-100 dark:border-white/[0.04]">
-          <p className="text-[10px] text-gray-400 dark:text-gray-600 font-mono">
-            v1.0.0 · IT3030 PAF 2026
-          </p>
+          <p className="text-[10px] text-gray-400 dark:text-gray-600 font-mono">v1.0.0 · IT3030 PAF 2026</p>
         </div>
       )}
     </aside>
