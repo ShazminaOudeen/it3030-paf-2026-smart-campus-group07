@@ -2,23 +2,20 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
-// import { useAuth } from "../context/AuthContext"; // ← uncomment when Member 4 sets up AuthContext
 
 const NAV_LINKS = [
-  { label: "Home",         to: "/",           sectionId: "hero"         },
-  { label: "Facilities",   to: "/facilities",  sectionId: null           },
-  { label: "Incidents",    to: "/incidents",   sectionId: null           },
-  { label: "Services",     to: "/#features",   sectionId: "features"     },
+  { label: "Home",         to: "/",             sectionId: "hero"         },
+  { label: "Facilities",   to: "/facilities",   sectionId: null           },
+  { label: "Incidents",    to: "/incidents",    sectionId: null           },
+  { label: "Services",     to: "/#features",    sectionId: "features"     },
   { label: "How it Works", to: "/#how-it-works", sectionId: "how-it-works" },
 ];
 
-// IDs of <section> elements in HomePage.jsx that trigger scroll-based highlighting
 const HOME_SECTIONS = ["hero", "features", "how-it-works", "roles", "cta"];
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
-  // const { user } = useAuth(); // ← uncomment when AuthContext is ready
-  const user = null; // ← remove this line once AuthContext is wired up
+  const user = null;
 
   const [menuOpen, setMenuOpen]           = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
@@ -26,17 +23,14 @@ export default function Navbar() {
   const location   = useLocation();
   const isHomePage = location.pathname === "/";
 
-  // Shadow appears after scrolling 10px
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // IntersectionObserver: highlights the nav link for whichever section is on screen
   useEffect(() => {
     if (!isHomePage) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -45,35 +39,20 @@ export default function Navbar() {
       },
       { rootMargin: "-40% 0px -55% 0px" }
     );
-
     HOME_SECTIONS.forEach((id) => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
-
     return () => observer.disconnect();
   }, [isHomePage]);
 
-  // A link is "active" if:
-  //   - it's a normal page route whose pathname matches, OR
-  //   - we're on the homepage and the link's sectionId matches the current scroll section
   const isActive = (link) => {
     const { to, sectionId } = link;
-
-    if (to === "/" ) {
-      // "Home" is active when we're on homepage and no other section is scrolled to
-      return isHomePage && activeSection === "hero";
-    }
-
-    if (sectionId && isHomePage) {
-      return activeSection === sectionId;
-    }
-
-    // Normal pathname match for non-home pages
+    if (to === "/") return isHomePage && activeSection === "hero";
+    if (sectionId && isHomePage) return activeSection === sectionId;
     return !to.includes("#") && location.pathname.startsWith(to);
   };
 
-  // Smooth-scroll for anchor links
   const handleClick = (e, to) => {
     if (to === "/" && isHomePage) {
       e.preventDefault();
@@ -81,7 +60,7 @@ export default function Navbar() {
     }
     if (to.startsWith("/#")) {
       e.preventDefault();
-      const id = to.slice(2); // strip "/#"
+      const id = to.slice(2);
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     }
   };
@@ -98,21 +77,21 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
 
-          {/* ── Logo ───────────────────────────────────────────────────── */}
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-  <img
-    src="/src/assets/assetra_logo.png"
-    alt="Assetra logo"
-    className="h-8 w-8 rounded-lg object-cover
-               group-hover:scale-110 transition-transform duration-200"
-  />
-  <span className="font-display font-bold text-lg
-                   text-gray-900 dark:text-white tracking-tight">
-    Asse<span className="text-orange-500">tra</span>
-  </span>
-</Link>
+            <img
+              src="/src/assets/assetra_logo.png"
+              alt="Assetra logo"
+              className="h-8 w-8 rounded-lg object-cover
+                         group-hover:scale-110 transition-transform duration-200"
+            />
+            <span className="font-display font-bold text-lg
+                             text-gray-900 dark:text-white tracking-tight">
+              Asse<span className="text-orange-500">tra</span>
+            </span>
+          </Link>
 
-          {/* ── Desktop nav ────────────────────────────────────────────── */}
+          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
             {NAV_LINKS.map((link) => {
               const active = isActive(link);
@@ -138,7 +117,7 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* ── Right side ─────────────────────────────────────────────── */}
+          {/* Right side */}
           <div className="flex items-center gap-2">
 
             {/* Dark mode toggle */}
@@ -186,13 +165,12 @@ export default function Navbar() {
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                 </svg>
-                {/* Member 4: make this conditional on unread count > 0 */}
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full
                                  bg-orange-500 ring-2 ring-white dark:ring-gray-950"/>
               </Link>
             )}
 
-            {/* Sign in / user avatar */}
+            {/* Auth buttons */}
             {user ? (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                               bg-gray-100 dark:bg-gray-800
@@ -205,7 +183,7 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                {/* Login — outlined secondary button */}
+                {/* Login button */}
                 <Link
                   to="/login"
                   className="flex items-center px-4 py-2 rounded-lg
@@ -220,9 +198,9 @@ export default function Navbar() {
                   Login
                 </Link>
 
-                {/* Sign in — primary CTA */}
+                {/* Sign in → Register */}
                 <Link
-                  to="/login"
+                  to="/register"
                   className="flex items-center gap-2 px-4 py-2 rounded-lg
                              bg-orange-500 hover:bg-orange-600
                              text-white text-sm font-semibold
@@ -257,7 +235,7 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* ── Mobile dropdown ──────────────────────────────────────────── */}
+        {/* Mobile dropdown */}
         {menuOpen && (
           <div className="md:hidden pb-3 pt-1 flex flex-col gap-1 animate-fade-up">
             {NAV_LINKS.map((link) => (
@@ -288,7 +266,7 @@ export default function Navbar() {
                   Login
                 </Link>
                 <Link
-                  to="/login"
+                  to="/register"
                   onClick={() => setMenuOpen(false)}
                   className="px-4 py-2.5 rounded-lg bg-orange-500 text-white
                              text-sm font-semibold text-center hover:bg-orange-600 transition"
