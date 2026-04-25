@@ -8,24 +8,33 @@ import HomePage from "./pages/HomePage";
 import AdminLayout from "./shared/components/AdminLayout";
 import AdminComingSoon from "./pages/AdminComingSoon";
 
-//user imports
+// User imports
 import UserLayout from "./shared/components/UserLayout";
 import UserComingSoon from "./pages/UserComingSoon";
 
-//technician imports
+// Technician imports
 import TechnicianLayout from "./shared/components/TechnicianLayout";
 import TechnicianComingSoon from "./pages/TechnicianComingSoon";
 
-//booking
-import NewBookingPage        from "./booking/pages/NewBookingPage";
-import BookingsPage          from "./booking/pages/BookingsPage";
-import AdminBookingsPage     from "./booking/pages/AdminBookingsPage";
-import AdminPendingPage      from "./booking/pages/AdminPendingPage";
-import QrCheckInPage         from "./booking/pages/QrCheckInPage";
+// Booking imports
+import NewBookingPage    from "./booking/pages/NewBookingPage";
+import BookingsPage      from "./booking/pages/BookingsPage";
+import AdminBookingsPage from "./booking/pages/AdminBookingsPage";
+import AdminPendingPage  from "./booking/pages/AdminPendingPage";
+import QrCheckInPage     from "./booking/pages/QrCheckInPage";
 
-//facilities
+// Facility imports
 import AdminFacilitiesPage from "./facility/pages/AdminFacilitiesPage";
 import UserFacilitiesPage  from "./facility/pages/UserFacilitiesPage";
+
+// Incident imports
+import ReportIssuePage           from "./incident/pages/ReportIssuePage";
+import MyTicketsPage             from "./incident/pages/MyTicketsPage";
+import AdminAllTicketsPage       from "./incident/pages/AdminAllTicketsPage";
+import AdminAssignTechnicianPage from "./incident/pages/AdminAssignTechnicianPage";
+import TechnicianAssignedPage    from "./incident/pages/TechnicianAssignedPage";
+import TechnicianOpenTicketsPage from "./incident/pages/TechnicianOpenTicketsPage";
+import TechnicianResolvedPage    from "./incident/pages/TechnicianResolvedPage";
 
 export default function App() {
   return (
@@ -33,7 +42,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
 
-          {/* ── Public routes (with Navbar + Footer) ── */}
+          {/* ── Public routes ── */}
           <Route
             path="/"
             element={
@@ -47,48 +56,49 @@ export default function App() {
             }
           />
 
-          {/* ── Admin routes (no Navbar/Footer, own layout) ── */}
+          {/* ── Admin routes ── */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminComingSoon />} />
             <Route path="dashboard" element={<AdminComingSoon />} />
-            <Route path="resources"     element={<AdminFacilitiesPage />} />
-           <Route path="resources/add" element={<AdminFacilitiesPage />} />
-            <Route path="bookings"         element={<AdminBookingsPage />} />
-            <Route path="bookings/pending" element={<AdminPendingPage />} />
-
-            <Route path="maintenance" element={<AdminComingSoon />} />
-            <Route path="maintenance/assign" element={<AdminComingSoon />} />
-            <Route path="management/users" element={<AdminComingSoon />} />
-            <Route path="management/notifications" element={<AdminComingSoon />} />
-            <Route path="account/profile" element={<AdminComingSoon />} />
-            <Route path="logout" element={<AdminComingSoon />} />
+            <Route path="resources"          element={<AdminFacilitiesPage />} />
+            <Route path="resources/add"      element={<AdminFacilitiesPage />} />
+            <Route path="bookings"           element={<AdminBookingsPage />} />
+            <Route path="bookings/pending"   element={<AdminPendingPage />} />
+            <Route path="maintenance"        element={<AdminAllTicketsPage />} />
+            <Route path="maintenance/assign" element={<AdminAssignTechnicianPage />} />
+            <Route path="management/users"          element={<AdminComingSoon />} />
+            <Route path="management/notifications"  element={<AdminComingSoon />} />
+            <Route path="account/profile"           element={<AdminComingSoon />} />
+            <Route path="logout"                    element={<AdminComingSoon />} />
           </Route>
 
-          
+          {/* ── User routes ── */}
           <Route path="/user" element={<UserLayout />}>
             <Route index element={<UserComingSoon />} />
-            <Route path="dashboard" element={<UserComingSoon />} />
-             <Route path="resources" element={<UserFacilitiesPage />} />
-             <Route path="bookings/new" element={<NewBookingPage />} />
-            <Route path="bookings"     element={<BookingsPage />} />
-            <Route path="maintenance/report" element={<UserComingSoon />} />
-            <Route path="maintenance" element={<UserComingSoon />} />
-            <Route path="notifications" element={<UserComingSoon />} />
-            <Route path="account/profile" element={<UserComingSoon />} />
-            <Route path="logout" element={<UserComingSoon />} />
-        </Route>
+            <Route path="dashboard"          element={<UserComingSoon />} />
+            <Route path="resources"          element={<UserFacilitiesPage />} />
+            <Route path="bookings/new"       element={<NewBookingPage />} />
+            <Route path="bookings"           element={<BookingsPage />} />
+            <Route path="maintenance/report" element={<ReportIssuePage />} />
+            <Route path="maintenance"        element={<MyTicketsPage />} />
+            <Route path="notifications"      element={<UserComingSoon />} />
+            <Route path="account/profile"    element={<UserComingSoon />} />
+            <Route path="logout"             element={<UserComingSoon />} />
+          </Route>
 
-        <Route path="/technician" element={<TechnicianLayout />}>
+          {/* ── Technician routes ── */}
+          <Route path="/technician" element={<TechnicianLayout />}>
             <Route index element={<TechnicianComingSoon />} />
-            <Route path="dashboard" element={<TechnicianComingSoon />} />
-            <Route path="tickets/assigned" element={<TechnicianComingSoon />} />
-            <Route path="tickets/open" element={<TechnicianComingSoon />} />
-            <Route path="tickets/resolved" element={<TechnicianComingSoon />} />
-            <Route path="resources" element={<TechnicianComingSoon />} />
-            <Route path="notifications" element={<TechnicianComingSoon />} />
-            <Route path="account/profile" element={<TechnicianComingSoon />} />
-            <Route path="logout" element={<TechnicianComingSoon />} />
-        </Route>
+            <Route path="dashboard"          element={<TechnicianComingSoon />} />
+            <Route path="tickets/assigned"   element={<TechnicianAssignedPage />} />
+            <Route path="tickets/open"       element={<TechnicianOpenTicketsPage />} />
+            <Route path="tickets/resolved"   element={<TechnicianResolvedPage />} />
+            <Route path="resources"          element={<TechnicianComingSoon />} />
+            <Route path="notifications"      element={<TechnicianComingSoon />} />
+            <Route path="account/profile"    element={<TechnicianComingSoon />} />
+            <Route path="logout"             element={<TechnicianComingSoon />} />
+          </Route>
+
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
