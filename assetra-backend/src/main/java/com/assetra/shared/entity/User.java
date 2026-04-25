@@ -32,6 +32,9 @@ public class User {
     @Column(name = "phone")
     private String phone;
 
+    @Column(name = "provider")
+    private String provider;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

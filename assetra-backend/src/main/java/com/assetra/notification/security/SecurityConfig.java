@@ -36,15 +36,25 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+            .sessionManagement(s -> s
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/actuator/**").permitAll()
+                .requestMatchers(
+                    "/auth/**",
+                    "/actuator/**",
+                    "/login/**",
+                    "/oauth2/**",
+                    "/error"
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth -> oauth
+                .loginPage("/login")
                 .userInfoEndpoint(u -> u.userService(customOAuth2UserService))
                 .successHandler(oAuth2SuccessHandler)
+                .failureUrl("http://localhost:5173/login?error=true")
             )
+            .formLogin(form -> form.disable())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
