@@ -13,6 +13,7 @@ import LoginPortalPage     from "./notification/pages/LoginPortalPage";
 import RoleLoginPage       from "./notification/pages/RoleLoginPage";
 import OAuthCallbackPage   from "./notification/pages/OAuthCallbackPage";
 import AdminUserManagement from "./notification/pages/AdminUserManagement";
+import ProfilePage from "./shared/components/ProfilePage";
 
 // ── Member 3 — Incidents ──
 import ReportIssuePage           from "./incident/pages/ReportIssuePage";
@@ -55,7 +56,7 @@ export default function App() {
             <Route path="/register"        element={<RegisterPage />} />
             <Route path="/login"           element={<LoginPortalPage />} />
             <Route path="/login/:role"     element={<RoleLoginPage />} />
-            <Route path="/oauth2/callback" element={<OAuthCallbackPage />} />
+            <Route path="/oauth2/success" element={<OAuthCallbackPage />} />
 
             {/* ── Admin routes ── */}
             <Route path="/admin" element={<AdminLayout />}>
@@ -69,7 +70,7 @@ export default function App() {
               <Route path="maintenance/assign"     element={<AdminAssignTechnicianPage />} /> {/* Member 3 */}
               <Route path="management/users"       element={<AdminUserManagement />} />  {/* Member 4 */}
               <Route path="management/notifications" element={<AdminComingSoon />} />    {/* Member 4 */}
-              <Route path="account/profile"        element={<AdminComingSoon />} />
+              <Route path="account/profile" element={<ProfilePage />} /> 
               <Route path="logout"                 element={<AdminComingSoon />} />
             </Route>
 
@@ -83,8 +84,9 @@ export default function App() {
               <Route path="maintenance/report"     element={<ReportIssuePage />} />      {/* Member 3 */}
               <Route path="maintenance"            element={<MyTicketsPage />} />         {/* Member 3 */}
               <Route path="notifications"          element={<UserComingSoon />} />        {/* Member 4 */}
-              <Route path="account/profile"        element={<UserComingSoon />} />
+              <Route path="account/profile" element={<ProfilePage />} />
               <Route path="logout"                 element={<UserComingSoon />} />
+
             </Route>
 
             {/* ── Technician routes ── */}
@@ -96,7 +98,7 @@ export default function App() {
               <Route path="tickets/resolved"       element={<TechnicianResolvedPage />} />    {/* Member 3 */}
               <Route path="resources"              element={<TechnicianComingSoon />} />      {/* Member 1 */}
               <Route path="notifications"          element={<TechnicianComingSoon />} />      {/* Member 4 */}
-              <Route path="account/profile"        element={<TechnicianComingSoon />} />
+              <Route path="account/profile" element={<ProfilePage />} />
               <Route path="logout"                 element={<TechnicianComingSoon />} />
             </Route>
 
