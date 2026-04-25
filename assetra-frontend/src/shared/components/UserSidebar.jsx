@@ -1,10 +1,11 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, BookOpen, PlusSquare, CalendarDays,
   Wrench, ClipboardList, Bell, LogOut, ChevronDown,
-  ChevronRight, Home, Layers,
+  ChevronRight, Home, Layers, User
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import logo from "../../assets/assetra_logo.png";
 
 const MENU = [
@@ -30,11 +31,13 @@ const MENU = [
     ],
   },
   { label: "Notifications", icon: Bell, href: "/user/notifications" },
+
+  // ✅ ADDED
+  { label: "My Profile", icon: User, href: "/user/account/profile" },
 ];
 
 const BOTTOM_MENU = [
   { label: "Go to Home", icon: Home, href: "/", external: true },
-  { label: "Logout", icon: LogOut, href: "/user/logout", danger: true },
 ];
 
 function NavItem({ item, collapsed }) {
@@ -105,6 +108,14 @@ function NavGroup({ group, collapsed }) {
 }
 
 export default function UserSidebar({ open, collapsed, onCollapsedChange }) {
+  const { logout } = useAuth();              // ✅ ADDED
+  const navigate = useNavigate();            // ✅ ADDED
+
+  const handleLogout = () => {               // ✅ ADDED
+    logout();
+    navigate("/");
+  };
+
   return (
     <aside
       className={`
@@ -138,8 +149,7 @@ export default function UserSidebar({ open, collapsed, onCollapsedChange }) {
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5
-        [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
         {MENU.map((item) =>
           item.children ? (
             <NavGroup key={item.label} group={item} collapsed={collapsed} />
@@ -153,6 +163,15 @@ export default function UserSidebar({ open, collapsed, onCollapsedChange }) {
         {BOTTOM_MENU.map((item) => (
           <NavItem key={item.href} item={item} collapsed={collapsed} />
         ))}
+
+        {/* ✅ REPLACED LOGOUT */}
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all duration-150"
+        >
+          <LogOut size={15} className="shrink-0" />
+          {!collapsed && <span className="truncate flex-1">Logout</span>}
+        </button>
       </div>
 
       {!collapsed && (
