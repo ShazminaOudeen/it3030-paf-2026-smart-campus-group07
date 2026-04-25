@@ -40,13 +40,14 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/auth/**",
-                    "/actuator/**",
-                    "/login/**",
-                    "/oauth2/**",
-                    "/error"
-                ).permitAll()
-                .anyRequest().authenticated()
+                  "/auth/**",
+                  "/actuator/**",
+                  "/login/**",
+                  "/oauth2/**",
+                  "/error"
+             ).permitAll()
+            .requestMatchers("/users/**").hasAuthority("ROLE_ADMIN")
+            .anyRequest().authenticated()
             )
             .oauth2Login(oauth -> oauth
                 .loginPage("/login")

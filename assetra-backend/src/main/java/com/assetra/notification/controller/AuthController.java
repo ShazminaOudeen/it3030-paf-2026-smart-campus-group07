@@ -43,23 +43,35 @@ public class AuthController {
         String email = body.get("email");
         String password = body.get("password");
 
-        User user = userRepository.findByEmail(email)
-                .orElse(null);
+        User user = userRepository.findByEmail(email).orElse(null);
 
-        if (user == null || user.getPasswordHash() == null ||
-            !passwordEncoder.matches(password, user.getPasswordHash())) {
+        if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Invalid email or password"));
-        }
+                .body(Map.of("message", "Invalid email or password"));
+     }
+
+        if (user.getPasswordHash() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("message", "This account uses OAuth login. Please use Google or GitHub to sign in."));
+     }
+
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("message", "Invalid email or password"));
+     }
 
         String token = jwtService.generateToken(
-                user.getEmail(), user.getRole(), user.getId().toString());
+            user.getEmail(), user.getRole(), user.getId().toString());
 
         return ResponseEntity.ok(new AuthResponse(
-                token, user.getEmail(), user.getName(),
-                user.getRole(), user.getPictureUrl(), user.getId().toString()));
+            token, user.getEmail(), user.getName(),
+            user.getRole(), user.getPictureUrl(), user.getId().toString()));
     }
-
+    @GetMapping("/generate-hash")
+    public ResponseEntity<?> generateHash() {
+        String hash = passwordEncoder.encode("Admin@123");
+    return ResponseEntity.ok(Map.of("hash", hash));
+    }
     @GetMapping("/me")
     public ResponseEntity<?> me(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.substring(7);
