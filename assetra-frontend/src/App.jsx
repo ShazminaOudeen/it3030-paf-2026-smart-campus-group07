@@ -16,6 +16,17 @@ import UserComingSoon from "./pages/UserComingSoon";
 import TechnicianLayout from "./shared/components/TechnicianLayout";
 import TechnicianComingSoon from "./pages/TechnicianComingSoon";
 
+//booking
+import NewBookingPage        from "./booking/pages/NewBookingPage";
+import BookingsPage          from "./booking/pages/BookingsPage";
+import AdminBookingsPage     from "./booking/pages/AdminBookingsPage";
+import AdminPendingPage      from "./booking/pages/AdminPendingPage";
+import QrCheckInPage         from "./booking/pages/QrCheckInPage";
+
+//facilities
+import AdminFacilitiesPage from "./facility/pages/AdminFacilitiesPage";
+import UserFacilitiesPage  from "./facility/pages/UserFacilitiesPage";
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -40,10 +51,11 @@ export default function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminComingSoon />} />
             <Route path="dashboard" element={<AdminComingSoon />} />
-            <Route path="resources" element={<AdminComingSoon />} />
-            <Route path="resources/add" element={<AdminComingSoon />} />
-            <Route path="bookings" element={<AdminComingSoon />} />
-            <Route path="bookings/pending" element={<AdminComingSoon />} />
+            <Route path="resources"     element={<AdminFacilitiesPage />} />
+           <Route path="resources/add" element={<AdminFacilitiesPage />} />
+            <Route path="bookings"         element={<AdminBookingsPage />} />
+            <Route path="bookings/pending" element={<AdminPendingPage />} />
+
             <Route path="maintenance" element={<AdminComingSoon />} />
             <Route path="maintenance/assign" element={<AdminComingSoon />} />
             <Route path="management/users" element={<AdminComingSoon />} />
@@ -56,9 +68,9 @@ export default function App() {
           <Route path="/user" element={<UserLayout />}>
             <Route index element={<UserComingSoon />} />
             <Route path="dashboard" element={<UserComingSoon />} />
-            <Route path="resources" element={<UserComingSoon />} />
-            <Route path="bookings/new" element={<UserComingSoon />} />
-            <Route path="bookings" element={<UserComingSoon />} />
+             <Route path="resources" element={<UserFacilitiesPage />} />
+             <Route path="bookings/new" element={<NewBookingPage />} />
+            <Route path="bookings"     element={<BookingsPage />} />
             <Route path="maintenance/report" element={<UserComingSoon />} />
             <Route path="maintenance" element={<UserComingSoon />} />
             <Route path="notifications" element={<UserComingSoon />} />
