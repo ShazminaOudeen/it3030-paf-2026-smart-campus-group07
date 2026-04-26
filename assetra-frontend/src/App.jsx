@@ -13,6 +13,7 @@ import LoginPortalPage     from "./notification/pages/LoginPortalPage";
 import RoleLoginPage       from "./notification/pages/RoleLoginPage";
 import OAuthCallbackPage   from "./notification/pages/OAuthCallbackPage";
 import AdminUserManagement from "./notification/pages/AdminUserManagement";
+import ProfilePage         from "./shared/components/ProfilePage";
 
 // ── Member 3 — Incidents ──
 import ReportIssuePage           from "./incident/pages/ReportIssuePage";
@@ -63,52 +64,52 @@ export default function App() {
             <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
 
             {/* ── Auth (Member 4) ── */}
-            <Route path="/register"        element={<RegisterPage />} />
-            <Route path="/login"           element={<LoginPortalPage />} />
-            <Route path="/login/:role"     element={<RoleLoginPage />} />
-            <Route path="/oauth2/callback" element={<OAuthCallbackPage />} />
+            <Route path="/register"       element={<RegisterPage />} />
+            <Route path="/login"          element={<LoginPortalPage />} />
+            <Route path="/login/:role"    element={<RoleLoginPage />} />
+            <Route path="/oauth2/success" element={<OAuthCallbackPage />} />
 
             {/* ── Admin routes ── */}
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index                            element={<AdminComingSoon />} />
-              <Route path="dashboard"                 element={<AdminComingSoon />} />
-              <Route path="resources"                 element={<AdminFacilitiesPage />} />
-              <Route path="resources/add"             element={<AdminFacilitiesPage />} />
-              <Route path="bookings"                  element={<AdminBookingsPage />} />
-              <Route path="bookings/pending"          element={<AdminPendingPage />} />
-              <Route path="maintenance"               element={<AdminAllTicketsPage />} />
-              <Route path="maintenance/assign"        element={<AdminAssignTechnicianPage />} />
-              <Route path="management/users"          element={<AdminUserManagement />} />
-              <Route path="management/notifications"  element={<AdminComingSoon />} />
-              <Route path="account/profile"           element={<AdminComingSoon />} />
-              <Route path="logout"                    element={<AdminComingSoon />} />
+              <Route index                           element={<AdminComingSoon />} />
+              <Route path="dashboard"                element={<AdminComingSoon />} />
+              <Route path="resources"                element={<AdminFacilitiesPage />} />
+              <Route path="resources/add"            element={<AdminFacilitiesPage />} />
+              <Route path="bookings"                 element={<AdminBookingsPage />} />
+              <Route path="bookings/pending"         element={<AdminPendingPage />} />
+              <Route path="maintenance"              element={<AdminAllTicketsPage />} />
+              <Route path="maintenance/assign"       element={<AdminAssignTechnicianPage />} />
+              <Route path="management/users"         element={<AdminUserManagement />} />
+              <Route path="management/notifications" element={<AdminComingSoon />} />
+              <Route path="account/profile"          element={<ProfilePage />} />
+              <Route path="logout"                   element={<AdminComingSoon />} />
             </Route>
 
             {/* ── User routes ── */}
             <Route path="/user" element={<UserLayout />}>
-              <Route index                            element={<UserComingSoon />} />
-              <Route path="dashboard"                 element={<UserComingSoon />} />
-              <Route path="resources"                 element={<UserFacilitiesPage />} />
-              <Route path="bookings/new"              element={<NewBookingPage />} />
-              <Route path="bookings"                  element={<BookingsPage />} />
-              <Route path="maintenance/report"        element={<ReportIssuePage />} />
-              <Route path="maintenance"               element={<MyTicketsPage />} />
-              <Route path="notifications"             element={<UserComingSoon />} />
-              <Route path="account/profile"           element={<UserComingSoon />} />
-              <Route path="logout"                    element={<UserComingSoon />} />
+              <Route index                      element={<UserComingSoon />} />
+              <Route path="dashboard"           element={<UserComingSoon />} />
+              <Route path="resources"           element={<UserFacilitiesPage />} />
+              <Route path="bookings/new"        element={<NewBookingPage />} />
+              <Route path="bookings"            element={<BookingsPage />} />
+              <Route path="maintenance/report"  element={<ReportIssuePage />} />
+              <Route path="maintenance"         element={<MyTicketsPage />} />
+              <Route path="notifications"       element={<UserComingSoon />} />
+              <Route path="account/profile"     element={<ProfilePage />} />
+              <Route path="logout"              element={<UserComingSoon />} />
             </Route>
 
             {/* ── Technician routes ── */}
             <Route path="/technician" element={<TechnicianLayout />}>
-              <Route index                            element={<TechnicianComingSoon />} />
-              <Route path="dashboard"                 element={<TechnicianComingSoon />} />
-              <Route path="tickets/assigned"          element={<TechnicianAssignedPage />} />
-              <Route path="tickets/open"              element={<TechnicianOpenTicketsPage />} />
-              <Route path="tickets/resolved"          element={<TechnicianResolvedPage />} />
-              <Route path="resources"                 element={<TechnicianComingSoon />} />
-              <Route path="notifications"             element={<TechnicianComingSoon />} />
-              <Route path="account/profile"           element={<TechnicianComingSoon />} />
-              <Route path="logout"                    element={<TechnicianComingSoon />} />
+              <Route index                      element={<TechnicianComingSoon />} />
+              <Route path="dashboard"           element={<TechnicianComingSoon />} />
+              <Route path="tickets/assigned"    element={<TechnicianAssignedPage />} />
+              <Route path="tickets/open"        element={<TechnicianOpenTicketsPage />} />
+              <Route path="tickets/resolved"    element={<TechnicianResolvedPage />} />
+              <Route path="resources"           element={<TechnicianComingSoon />} />
+              <Route path="notifications"       element={<TechnicianComingSoon />} />
+              <Route path="account/profile"     element={<ProfilePage />} />
+              <Route path="logout"              element={<TechnicianComingSoon />} />
             </Route>
 
           </Routes>

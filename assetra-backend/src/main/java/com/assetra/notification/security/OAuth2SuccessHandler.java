@@ -31,7 +31,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String token = jwtService.generateToken(
                 user.getEmail(), user.getRole(), user.getId().toString());
 
-        String redirectUrl = "http://localhost:5173/oauth2/callback?token=" + token;
-        response.sendRedirect(redirectUrl);
+        // Pass both token AND role so frontend can redirect to correct dashboard
+        String role = user.getRole().toUpperCase();
+        String frontendUrl = "http://localhost:5173/oauth2/success?token=" + token + "&role=" + role;
+        response.sendRedirect(frontendUrl);
     }
 }
