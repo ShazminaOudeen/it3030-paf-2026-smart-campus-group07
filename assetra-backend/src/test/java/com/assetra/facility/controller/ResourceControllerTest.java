@@ -15,11 +15,9 @@ import static org.mockito.Mockito.when;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,11 +31,6 @@ import java.util.UUID;
 
 @WebMvcTest(ResourceController.class)
 class ResourceControllerTest {
-
-    // ── Enable @PreAuthorize in WebMvcTest context ────────────────────────────
-    @Configuration
-    @EnableMethodSecurity
-    static class MethodSecurityConfig {}
 
     @Autowired
     private MockMvc mockMvc;
@@ -68,7 +61,7 @@ class ResourceControllerTest {
                 any(), any(), any(), any(), any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(res)));
 
-        mockMvc.perform(get("/resources"))
+        mockMvc.perform(get("/api/resources"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].name").value("Lab A101"))
                 .andExpect(jsonPath("$.content[0].type").value("LAB"));
@@ -97,7 +90,7 @@ class ResourceControllerTest {
 
         when(resourceService.createResource(any())).thenReturn(resp);
 
-        mockMvc.perform(post("/resources")
+        mockMvc.perform(post("/api/resources")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
@@ -113,7 +106,7 @@ class ResourceControllerTest {
     void deleteResource_asAdmin_returns204() throws Exception {
         UUID id = UUID.randomUUID();
 
-        mockMvc.perform(delete("/resources/{id}", id).with(csrf()))
+        mockMvc.perform(delete("/api/resources/{id}", id).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -128,7 +121,7 @@ class ResourceControllerTest {
                 .capacity(20)
                 .build();
 
-        mockMvc.perform(post("/resources")
+        mockMvc.perform(post("/api/resources")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
