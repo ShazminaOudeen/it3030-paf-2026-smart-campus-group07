@@ -155,11 +155,10 @@ export default function ReportIssuePage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-
         <div className="fade-up-1">
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Affected Resource
-            <span className="text-gray-500 ml-1">(optional until resources are added)</span>
+            <span className="text-gray-500 ml-1">(optional)</span>
           </label>
           <select
             name="resourceId"
@@ -178,9 +177,7 @@ export default function ReportIssuePage() {
               <option disabled value="">No resources available yet</option>
             )}
           </select>
-          <p className="text-xs text-gray-600 mt-1">
-            Select the lab, room, or equipment that has the issue
-          </p>
+          <p className="text-xs text-gray-600 mt-1">Select the lab, room, or equipment that has the issue</p>
         </div>
 
         <div className="fade-up-2">
