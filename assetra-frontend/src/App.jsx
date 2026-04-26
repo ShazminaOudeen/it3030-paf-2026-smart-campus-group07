@@ -10,6 +10,7 @@ import Navbar from "./shared/components/Navbar";
 import Footer from "./shared/components/Footer";
 import HomePage from "./pages/HomePage";
 
+
 // ── Member 4 — Auth / Notifications ──
 import RegisterPage        from "./notification/pages/RegisterPage";
 import LoginPortalPage     from "./notification/pages/LoginPortalPage";
@@ -64,12 +65,17 @@ function AppContent() {
     setAuthToken(token);
   }, [token]);
 
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    if (savedToken) setAuthToken(savedToken);
+  }, []);
   return (
     <BrowserRouter>
       <Routes>
 
         {/* ── Public ── */}
         <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
+        <Route path="/checkin/:token" element={<QrCheckInPage />} />
 
         {/* ── Auth (Member 4) ── */}
         <Route path="/register"       element={<RegisterPage />} />
