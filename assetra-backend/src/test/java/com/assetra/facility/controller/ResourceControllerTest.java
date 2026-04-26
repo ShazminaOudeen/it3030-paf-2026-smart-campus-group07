@@ -1,11 +1,12 @@
-package com.assetra.facility.controller;  // must match the controller's package
+package com.assetra.facility.controller;
 
-import com.assetra.facility.controller.ResourceController;  // explicit import — fixes "cannot be resolved"
+import com.assetra.facility.controller.ResourceController;
 import com.assetra.facility.dto.ResourceRequest;
 import com.assetra.facility.dto.ResourceResponse;
 import com.assetra.facility.enums.ResourceStatus;
 import com.assetra.facility.enums.ResourceType;
 import com.assetra.facility.service.ResourceService;
+import com.assetra.notification.security.JwtService;  // ← add this import
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,6 @@ import static org.mockito.Mockito.when;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-// Spring Boot 3.4+: @MockBean is deprecated → use @MockitoBean
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import org.springframework.data.domain.PageImpl;
@@ -43,8 +43,11 @@ class ResourceControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean   // replaces deprecated @MockBean in Spring Boot 3.4+
+    @MockitoBean
     private ResourceService resourceService;
+
+    @MockitoBean                // ← add this — mocks JwtService for the web layer
+    private JwtService jwtService;
 
     // ── Test 1: Any authenticated user can list resources ─────────────────────
 
@@ -108,7 +111,6 @@ class ResourceControllerTest {
     void deleteResource_asAdmin_returns204() throws Exception {
         UUID id = UUID.randomUUID();
 
-        // void method — nothing to stub, just verify 204
         mockMvc.perform(delete("/api/resources/{id}", id).with(csrf()))
                 .andExpect(status().isNoContent());
     }
@@ -116,7 +118,7 @@ class ResourceControllerTest {
     // ── Test 4: Regular user cannot create a resource (403) ───────────────────
 
     @Test
-    @WithMockUser   // default role is USER, not ADMIN
+    @WithMockUser
     void createResource_asRegularUser_returns403() throws Exception {
         ResourceRequest req = ResourceRequest.builder()
                 .name("Unauthorized Lab")
