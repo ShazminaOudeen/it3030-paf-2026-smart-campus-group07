@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createTicket } from "../api/ticketApi";
 
@@ -12,13 +12,27 @@ const PRIORITIES = [
 
 export default function ReportIssuePage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ category: "", description: "", priority: "MEDIUM", contactDetails: "", resourceId: "" });
+  const [form, setForm] = useState({
+    category: "",
+    description: "",
+    priority: "MEDIUM",
+    contactDetails: "",
+    resourceId: "",
+  });
+  const [resources, setResources] = useState([]);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState(1);
   const userId = "00000000-0000-0000-0000-000000000001";
+
+  useEffect(() => {
+    fetch("http://localhost:8082/api/resources")
+      .then((res) => res.json())
+      .then((data) => setResources(Array.isArray(data) ? data : []))
+      .catch(() => setResources([]));
+  }, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -80,11 +94,12 @@ export default function ReportIssuePage() {
         @keyframes fadeSlideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
         .fade-up { animation: fadeSlideUp 0.5s ease forwards; }
-        .fade-up-1 { animation: fadeSlideUp 0.5s ease 0.1s both; }
-        .fade-up-2 { animation: fadeSlideUp 0.5s ease 0.2s both; }
-        .fade-up-3 { animation: fadeSlideUp 0.5s ease 0.3s both; }
-        .fade-up-4 { animation: fadeSlideUp 0.5s ease 0.4s both; }
-        .fade-up-5 { animation: fadeSlideUp 0.5s ease 0.5s both; }
+        .fade-up-1 { animation: fadeSlideUp 0.5s ease 0.05s both; }
+        .fade-up-2 { animation: fadeSlideUp 0.5s ease 0.1s both; }
+        .fade-up-3 { animation: fadeSlideUp 0.5s ease 0.15s both; }
+        .fade-up-4 { animation: fadeSlideUp 0.5s ease 0.2s both; }
+        .fade-up-5 { animation: fadeSlideUp 0.5s ease 0.25s both; }
+        .fade-up-6 { animation: fadeSlideUp 0.5s ease 0.3s both; }
         .shimmer-btn {
           background: linear-gradient(90deg, #f97316, #fb923c, #f97316);
           background-size: 200% auto;
@@ -101,8 +116,13 @@ export default function ReportIssuePage() {
           outline: none;
           transition: all 0.2s;
         }
-        .input-field:focus { border-color: rgba(249,115,22,0.5); background: rgba(249,115,22,0.05); box-shadow: 0 0 0 3px rgba(249,115,22,0.1); }
+        .input-field:focus {
+          border-color: rgba(249,115,22,0.5);
+          background: rgba(249,115,22,0.05);
+          box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+        }
         .input-field::placeholder { color: rgba(255,255,255,0.25); }
+        .input-field option { background: #1a1a2e; color: white; }
       `}</style>
 
       {/* Header */}
@@ -121,7 +141,7 @@ export default function ReportIssuePage() {
 
         {/* Progress bar */}
         <div className="flex gap-2 mt-4">
-          {[1,2,3].map((s) => (
+          {[1, 2, 3].map((s) => (
             <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-500 ${step >= s ? "bg-orange-500" : "bg-white/10"}`} />
           ))}
         </div>
@@ -137,8 +157,37 @@ export default function ReportIssuePage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Category */}
+
+        {/* Resource Selection */}
         <div className="fade-up-1">
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Affected Resource *
+          </label>
+          <select
+            name="resourceId"
+            value={form.resourceId}
+            onChange={(e) => { handleChange(e); setStep(Math.max(step, 2)); }}
+            required
+            className="input-field"
+          >
+            <option value="">Select a resource (lab, room, equipment...)</option>
+            {resources.length > 0 ? (
+              resources.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name} — {r.type} {r.location ? `(${r.location})` : ""}
+                </option>
+              ))
+            ) : (
+              <option disabled value="">No resources available yet</option>
+            )}
+          </select>
+          <p className="text-xs text-gray-600 mt-1">
+            Select the lab, room, or equipment that has the issue
+          </p>
+        </div>
+
+        {/* Category */}
+        <div className="fade-up-2">
           <label className="block text-sm font-medium text-gray-300 mb-2">Category *</label>
           <div className="grid grid-cols-3 gap-2">
             {CATEGORIES.map((c) => (
@@ -158,20 +207,22 @@ export default function ReportIssuePage() {
         </div>
 
         {/* Description */}
-        <div className="fade-up-2">
+        <div className="fade-up-3">
           <label className="block text-sm font-medium text-gray-300 mb-2">Description *</label>
           <textarea
-            name="description" value={form.description}
+            name="description"
+            value={form.description}
             onChange={(e) => { handleChange(e); setStep(Math.max(step, 2)); }}
-            required rows={4}
-            placeholder="Describe the issue in detail — location, what happened, when it started..."
+            required
+            rows={4}
+            placeholder="Describe the issue in detail — what happened, when it started..."
             className="input-field resize-none"
           />
           <p className="text-xs text-gray-500 mt-1">{form.description.length} characters</p>
         </div>
 
         {/* Priority */}
-        <div className="fade-up-3">
+        <div className="fade-up-4">
           <label className="block text-sm font-medium text-gray-300 mb-2">Priority *</label>
           <div className="grid grid-cols-4 gap-2">
             {PRIORITIES.map((p) => (
@@ -191,24 +242,32 @@ export default function ReportIssuePage() {
         </div>
 
         {/* Contact */}
-        <div className="fade-up-4">
+        <div className="fade-up-5">
           <label className="block text-sm font-medium text-gray-300 mb-2">Contact Details *</label>
           <input
-            type="text" name="contactDetails" value={form.contactDetails}
+            type="text"
+            name="contactDetails"
+            value={form.contactDetails}
             onChange={(e) => { handleChange(e); setStep(Math.max(step, 3)); }}
-            required placeholder="Your phone number or email address"
+            required
+            placeholder="Your phone number or email address"
             className="input-field"
           />
         </div>
 
         {/* File Upload */}
-        <div className="fade-up-5">
+        <div className="fade-up-6">
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Attach Evidence <span className="text-gray-500">(max 3 images)</span>
           </label>
-          <label className="flex flex-col items-center justify-center w-full h-32 rounded-xl border-2 border-dashed border-white/10 cursor-pointer hover:border-orange-500/40 hover:bg-orange-500/5 transition-all duration-200 group">
-            <svg className="w-8 h-8 text-gray-500 group-hover:text-orange-400 mb-2 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <label className="flex flex-col items-center justify-center w-full h-32 rounded-xl
+                            border-2 border-dashed border-white/10 cursor-pointer
+                            hover:border-orange-500/40 hover:bg-orange-500/5
+                            transition-all duration-200 group">
+            <svg className="w-8 h-8 text-gray-500 group-hover:text-orange-400 mb-2 transition-colors"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span className="text-sm text-gray-500 group-hover:text-gray-400">
               {files.length > 0 ? `${files.length} file(s) selected ✓` : "Click to upload images"}
@@ -219,16 +278,18 @@ export default function ReportIssuePage() {
 
         {/* Submit */}
         <button
-          type="submit" disabled={loading}
-          className="w-full py-3.5 rounded-xl text-white font-semibold text-sm transition-all duration-200
+          type="submit"
+          disabled={loading}
+          className="w-full py-3.5 rounded-xl text-white font-semibold text-sm
                      shimmer-btn shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40
-                     hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                     hover:scale-[1.02] active:scale-[0.98]
+                     disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
               Submitting...
             </span>
