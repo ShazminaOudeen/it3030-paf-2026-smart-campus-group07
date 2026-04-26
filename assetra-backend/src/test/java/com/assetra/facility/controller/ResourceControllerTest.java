@@ -1,6 +1,5 @@
 package com.assetra.facility.controller;
 
-import com.assetra.facility.controller.ResourceController;
 import com.assetra.facility.dto.ResourceRequest;
 import com.assetra.facility.dto.ResourceResponse;
 import com.assetra.facility.enums.ResourceStatus;
@@ -16,17 +15,16 @@ import static org.mockito.Mockito.when;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
 import org.springframework.http.MediaType;
-
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -35,6 +33,11 @@ import java.util.UUID;
 
 @WebMvcTest(ResourceController.class)
 class ResourceControllerTest {
+
+    // ── Enable @PreAuthorize in WebMvcTest context ────────────────────────────
+    @Configuration
+    @EnableMethodSecurity
+    static class MethodSecurityConfig {}
 
     @Autowired
     private MockMvc mockMvc;
