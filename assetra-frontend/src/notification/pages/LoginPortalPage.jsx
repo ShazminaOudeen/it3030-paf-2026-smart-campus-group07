@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 const ROLES = [
   {
@@ -31,7 +32,8 @@ const ROLES = [
     linkColor: "text-blue-400 group-hover:text-blue-300",
     icon: (
       <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
       </svg>
     ),
     perms: ["View assigned tickets", "Update ticket status", "Add resolution notes", "Upload evidence photos", "Communicate with users", "Mark tickets as resolved"],
@@ -58,8 +60,10 @@ const ROLES = [
 ];
 
 export default function LoginPortalPage() {
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden transition-colors duration-300">
 
       {/* Background glows */}
       <div className="fixed inset-0 pointer-events-none">
@@ -72,6 +76,16 @@ export default function LoginPortalPage() {
       <div className="fixed inset-0 opacity-[0.02] pointer-events-none"
         style={{backgroundImage:"linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)",backgroundSize:"60px 60px"}}/>
 
+      {/* Top nav bar */}
+      <div className="fixed top-0 left-0 right-0 z-20 flex items-center px-6 py-4">
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors group">
+          <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform"/>
+          Back to Home
+        </button>
+      </div>
+
       <div className="relative z-10 w-full max-w-6xl">
 
         {/* Header */}
@@ -83,9 +97,9 @@ export default function LoginPortalPage() {
                 <polyline strokeLinecap="round" strokeLinejoin="round" points="9 22 9 12 15 12 15 22"/>
               </svg>
             </div>
-            <span className="text-white font-bold text-lg">Assetra</span>
+            <span className="text-gray-900 dark:text-white font-bold text-lg">Assetra</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 leading-tight">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
             Who are you{" "}
             <span className="text-orange-500 relative">
               logging in
@@ -95,7 +109,7 @@ export default function LoginPortalPage() {
             </span>
             {" "}as?
           </h1>
-          <p className="text-gray-400 text-base max-w-md mx-auto">
+          <p className="text-gray-500 dark:text-gray-400 text-base max-w-md mx-auto">
             Select your role to access your personalised dashboard and tools.
           </p>
         </div>
@@ -106,13 +120,13 @@ export default function LoginPortalPage() {
             <Link
               key={role.key}
               to={role.to}
-              className={`group relative bg-[#0f0f1a] border border-white/8 rounded-2xl p-6
+              className={`group relative bg-gray-50 dark:bg-[#0f0f1a] border border-gray-200 dark:border-white/8 rounded-2xl p-6
                          hover:shadow-2xl ${role.glowColor}
                          ${role.borderColor}
                          transition-all duration-300 hover:-translate-y-1`}
             >
               {/* Shimmer top line */}
-              <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"/>
+              <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-gray-300/50 dark:via-white/10 to-transparent"/>
 
               {/* Badge */}
               <div className="flex justify-between items-start mb-5">
@@ -125,16 +139,16 @@ export default function LoginPortalPage() {
               </div>
 
               {/* Title */}
-              <h3 className="text-xl font-bold text-white mb-1">{role.label}</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{role.label}</h3>
               <p className="text-gray-500 text-sm mb-5">{role.sub}</p>
 
               {/* Divider */}
-              <div className="h-px bg-white/5 mb-5"/>
+              <div className="h-px bg-gray-200 dark:bg-white/5 mb-5"/>
 
               {/* Permissions */}
               <ul className="space-y-2 mb-6">
                 {role.perms.map((p) => (
-                  <li key={p} className="flex items-center gap-2 text-sm text-gray-400">
+                  <li key={p} className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
                     </svg>
@@ -154,7 +168,7 @@ export default function LoginPortalPage() {
           ))}
         </div>
 
-        <p className="text-center text-gray-600 text-xs mt-10">
+        <p className="text-center text-gray-400 dark:text-gray-600 text-xs mt-10">
           Assetra © 2026 · Smart Campus Operations Hub
         </p>
       </div>
