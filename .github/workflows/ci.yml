@@ -66,5 +66,13 @@ jobs:
         working-directory: assetra-frontend
         run: npm run build
         env:
-          VITE_API_BASE_URL: /api
-          VITE_GOOGLE_CLIENT_ID: dummy
+          SPRING_PROFILES_ACTIVE: test
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/assetra_test
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
+          APP_JWT_SECRET: ci-test-secret-key-must-be-at-least-256-bits-xx
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: dummy
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: dummy
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_ID: dummy
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET: dummy
+          APP_CORS_ALLOWED_ORIGINS: http://localhost:5173
