@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/resources") 
+@RequestMapping("/resources")
 @RequiredArgsConstructor
 public class ResourceController {
 
@@ -29,7 +29,6 @@ public class ResourceController {
     /**
      * GET /api/resources
      * Publicly accessible – users and admins can browse resources.
-     * Supports: ?type=LAB&status=ACTIVE&minCapacity=30&location=Block A&search=physics&page=0&size=10&sort=name,asc
      */
     @GetMapping
     public ResponseEntity<Page<ResourceResponse>> getAllResources(
@@ -50,6 +49,18 @@ public class ResourceController {
         return ResponseEntity.ok(
                 resourceService.getAllResources(type, status, minCapacity, location, search, pageable)
         );
+    }
+
+    /**
+     * GET /api/resources/stats
+     * MUST be declared before /{id} — otherwise Spring treats "stats" as a UUID
+     * path variable and throws a MethodArgumentTypeMismatchException (400/500)
+     * before this method is ever reached.
+     */
+    @GetMapping("/stats")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> getStats() {
+        return ResponseEntity.ok(resourceService.getResourceStats());
     }
 
     /**
@@ -107,15 +118,5 @@ public class ResourceController {
     public ResponseEntity<Void> deleteResource(@PathVariable UUID id) {
         resourceService.deleteResource(id);
         return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * GET /api/resources/stats
-     * Get aggregate stats (ADMIN only).
-     */
-    @GetMapping("/stats")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> getStats() {
-        return ResponseEntity.ok(resourceService.getResourceStats());
     }
 }
