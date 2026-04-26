@@ -59,4 +59,21 @@ public class UserController {
         userRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateProfile(@PathVariable UUID id,
+          @RequestBody Map<String, String> body) {
+    User user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+    if (body.containsKey("name")) user.setName(body.get("name"));
+    if (body.containsKey("phone")) user.setPhone(body.get("phone"));
+    userRepository.save(user);
+    return ResponseEntity.ok(Map.of(
+            "id", user.getId().toString(),
+            "name", user.getName(),
+            "email", user.getEmail(),
+            "phone", user.getPhone() != null ? user.getPhone() : "",
+            "role", user.getRole()
+    ));
+    }
 }
