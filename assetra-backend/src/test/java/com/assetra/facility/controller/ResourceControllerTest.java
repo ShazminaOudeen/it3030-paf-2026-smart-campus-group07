@@ -6,12 +6,11 @@ import com.assetra.facility.dto.ResourceResponse;
 import com.assetra.facility.enums.ResourceStatus;
 import com.assetra.facility.enums.ResourceType;
 import com.assetra.facility.service.ResourceService;
-import com.assetra.notification.security.JwtService;  // ← add this import
+import com.assetra.notification.security.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
 
-import org.mockito.Mockito;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -46,7 +45,7 @@ class ResourceControllerTest {
     @MockitoBean
     private ResourceService resourceService;
 
-    @MockitoBean                // ← add this — mocks JwtService for the web layer
+    @MockitoBean
     private JwtService jwtService;
 
     // ── Test 1: Any authenticated user can list resources ─────────────────────
@@ -66,7 +65,7 @@ class ResourceControllerTest {
                 any(), any(), any(), any(), any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(res)));
 
-        mockMvc.perform(get("/api/resources"))
+        mockMvc.perform(get("/resources"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].name").value("Lab A101"))
                 .andExpect(jsonPath("$.content[0].type").value("LAB"));
@@ -95,7 +94,7 @@ class ResourceControllerTest {
 
         when(resourceService.createResource(any())).thenReturn(resp);
 
-        mockMvc.perform(post("/api/resources")
+        mockMvc.perform(post("/resources")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
@@ -111,7 +110,7 @@ class ResourceControllerTest {
     void deleteResource_asAdmin_returns204() throws Exception {
         UUID id = UUID.randomUUID();
 
-        mockMvc.perform(delete("/api/resources/{id}", id).with(csrf()))
+        mockMvc.perform(delete("/resources/{id}", id).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -126,7 +125,7 @@ class ResourceControllerTest {
                 .capacity(20)
                 .build();
 
-        mockMvc.perform(post("/api/resources")
+        mockMvc.perform(post("/resources")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
