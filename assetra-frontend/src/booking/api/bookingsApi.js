@@ -1,38 +1,33 @@
 // booking/api/bookingsApi.js
-// All Axios calls for Module B — Booking Management
-
 import axios from "axios";
 
 const BASE = "/api/bookings";
 
-// ── USER ─────────────────────────────────────────────────────────────────────
+// ── Helper: attach JWT token from localStorage ────────────────────────────────
+const authHeaders = () => ({
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+});
 
-/** Create a new booking request */
-export const createBooking = (data) => axios.post(BASE, data);
+// ── USER ──────────────────────────────────────────────────────────────────────
 
-/** Get the authenticated user's bookings */
-export const getMyBookings = () => axios.get(`${BASE}/my`);
-
-/** Get a single booking by ID */
-export const getBookingById = (id) => axios.get(`${BASE}/${id}`);
-
-/** Cancel a booking */
-export const cancelBooking = (id) => axios.patch(`${BASE}/${id}/cancel`);
+export const createBooking  = (data) => axios.post(BASE, data, authHeaders());
+export const getMyBookings  = ()     => axios.get(`${BASE}/my`, authHeaders());
+export const getBookingById = (id)   => axios.get(`${BASE}/${id}`, authHeaders());
+export const cancelBooking = (id) => axios.patch(`${BASE}/${id}/cancel`, {}, authHeaders());
 
 // ── ADMIN ─────────────────────────────────────────────────────────────────────
 
-/** Get all bookings (admin), optionally filtered by status */
-export const getAllBookings = (status) =>
-  axios.get(BASE, { params: status ? { status } : {} });
+export const getAllBookings  = (status) =>
+  axios.get(BASE, { ...authHeaders(), params: status ? { status } : {} });
 
-/** Get all pending bookings (admin shortcut) */
-export const getPendingBookings = () => axios.get(`${BASE}/pending`);
+export const getPendingBookings = () =>
+  axios.get(`${BASE}/pending`, authHeaders());
 
-/** Approve or reject a booking */
 export const reviewBooking = (id, action, rejectionReason) =>
-  axios.put(`${BASE}/${id}/review`, { action, rejectionReason });
+  axios.put(`${BASE}/${id}/review`, { action, rejectionReason }, authHeaders());
 
-// ── QR CHECK-IN ───────────────────────────────────────────────────────────────
+// ── QR CHECK-IN (public — no auth needed) ─────────────────────────────────────
 
-/** Verify a QR token (public — no auth needed) */
 export const verifyQrToken = (token) => axios.get(`${BASE}/checkin/${token}`);

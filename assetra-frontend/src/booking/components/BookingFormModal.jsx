@@ -123,10 +123,11 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
         expectedAttendees: isRoom && form.expectedAttendees !== ""
                              ? Number(form.expectedAttendees)
                              : null,
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
 
       setSuccess(true);
-      // Give the user a moment to read the success state, then notify parent
       setTimeout(() => {
         onSuccess?.();
         onClose();
@@ -134,9 +135,7 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
 
     } catch (err) {
       const msg = err.response?.data?.message ?? "Booking failed. Please try again.";
-
       if (err.response?.status === 409) {
-        // Time-slot conflict — surface error near the time fields
         setErrors({ _conflict: msg });
       } else {
         setErrors({ _general: msg });
@@ -145,7 +144,6 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
       setLoading(false);
     }
   };
-
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
