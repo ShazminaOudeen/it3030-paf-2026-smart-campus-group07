@@ -57,14 +57,12 @@ export default function BookingForm({ onSubmit, loading, error }) {
 
   // Fetch active resources once
   useEffect(() => {
-   axios.get("/api/resources?status=ACTIVE", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-      })
-      .then(({ data }) => {
-        setResources(Array.isArray(data) ? data : (data?.content ?? []));
-      })
-      .catch(() => setResources([]));
-  }, []);
+  axios.get("/api/resources?status=ACTIVE")
+    .then(({ data }) => {
+      setResources(Array.isArray(data) ? data : (data?.content ?? []));
+    })
+    .catch(() => setResources([]));
+}, []);
 
   // Derive the full selected resource object from the current resourceId
   const selectedResource = useMemo(

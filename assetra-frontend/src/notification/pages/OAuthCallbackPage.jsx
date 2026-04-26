@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../shared/context/AuthContext";
 
 export default function OAuthCallbackPage() {
   const navigate = useNavigate();
+  const { loginWithToken } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -14,17 +16,14 @@ export default function OAuthCallbackPage() {
       return;
     }
 
-    // Save token synchronously
-    localStorage.setItem("token", token);
-
-    // Small delay to ensure localStorage is written before navigation
-    setTimeout(() => {
+    // Fetch user details and save to localStorage, then redirect
+    loginWithToken(token).then(() => {
       switch (role?.toUpperCase()) {
         case "ADMIN":      navigate("/admin/dashboard",      { replace: true }); break;
         case "TECHNICIAN": navigate("/technician/dashboard", { replace: true }); break;
         default:           navigate("/user/dashboard",       { replace: true }); break;
       }
-    }, 100);
+    });
   }, []);
 
   return (

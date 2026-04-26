@@ -3,6 +3,8 @@ package com.assetra.booking.controller;
 import com.assetra.booking.dto.*;
 import com.assetra.booking.service.BookingService;
 import com.assetra.notification.security.JwtService;
+import com.assetra.shared.exception.UnauthorizedException;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +25,13 @@ public class BookingController {
 
     // ── Helper: extract user ID from JWT in request header ───────────────────
     private UUID currentUserId(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(7);
-        return UUID.fromString(jwtService.extractId(token));
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        throw new UnauthorizedException("Missing or invalid Authorization header");
     }
+    String token = authHeader.substring(7);
+    return UUID.fromString(jwtService.extractId(token));
+}
 
     // ── CREATE ────────────────────────────────────────────────────────────────
 

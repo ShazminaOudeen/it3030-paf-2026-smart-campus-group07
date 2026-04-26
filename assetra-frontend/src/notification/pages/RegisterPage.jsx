@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { ArrowLeft } from "lucide-react";
 
 const API = import.meta.env.VITE_API_BASE_URL;
 
@@ -147,6 +148,14 @@ export default function RegisterPage() {
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 py-10 sm:px-10 xl:px-16">
         <div className="w-full max-w-md mx-auto">
 
+          {/* Back to Home */}
+          <button
+            onClick={() => navigate("/")}
+            className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors group mb-6">
+            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform"/>
+            Back to Home
+          </button>
+
           {/* Logo */}
           <div className="mb-7">
             <div className="inline-flex items-center gap-2.5 mb-5">
@@ -213,7 +222,7 @@ export default function RegisterPage() {
 
             {/* Email */}
             <div>
-              <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">Email Address</label>
+              <label className="text-sm font-medium text-gray-600 dark:text-gray.400 mb-1.5 block">Email Address</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icons.email}</span>
                 <input type="email" name="email" value={form.email} onChange={handleChange}
