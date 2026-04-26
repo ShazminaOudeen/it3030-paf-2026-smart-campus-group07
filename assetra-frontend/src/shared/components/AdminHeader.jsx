@@ -3,6 +3,7 @@ import { useTheme } from "../../shared/context/ThemeContext";
 import { useAuth } from "../../shared/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { getUserDisplayName, getUserAvatar, getUserEmail } from "../../shared/utils/userHelpers";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -22,8 +23,10 @@ export default function AdminHeader() {
     navigate("/");
   };
 
-  const firstLetter = user?.name?.[0]?.toUpperCase() ?? "A";
-  const displayName = user?.name ?? "Admin";
+  const displayName = getUserDisplayName(user);
+  const avatarUrl = getUserAvatar(user);
+  const userEmail = getUserEmail(user);
+  const firstLetter = displayName[0].toUpperCase();
 
   return (
     <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-surface-border dark:border-white/[0.06]">
@@ -53,12 +56,11 @@ export default function AdminHeader() {
         {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
       </button>
 
-      {/* User dropdown */}
       <div className="relative">
         <div onClick={() => setDropdownOpen(!dropdownOpen)}
           className="flex items-center gap-2.5 pl-3 border-l border-surface-border dark:border-white/[0.08] cursor-pointer group">
-          {user?.picture ? (
-            <img src={user.picture} alt={displayName} className="w-8 h-8 rounded-full object-cover"/>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={displayName} className="w-8 h-8 rounded-full object-cover"/>
           ) : (
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-orange-500/30">
               {firstLetter}
@@ -75,7 +77,7 @@ export default function AdminHeader() {
           <div className="absolute right-0 top-12 w-48 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-white/10 shadow-xl z-50 overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 dark:border-white/8">
               <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{displayName}</p>
-              <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+              <p className="text-xs text-gray-400 truncate">{userEmail}</p>
             </div>
             <div className="py-1">
               <button onClick={handleLogout}

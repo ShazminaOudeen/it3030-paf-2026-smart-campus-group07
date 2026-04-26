@@ -11,16 +11,23 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     const savedUser  = localStorage.getItem("user");
+
     if (savedToken && savedUser) {
       try {
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
+        setLoading(false);
       } catch {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        setLoading(false);
       }
+    } else if (savedToken && !savedUser) {
+      // token exists but user was never saved — fetch it now
+      loginWithToken(savedToken).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
-    setLoading(false); // ← done checking
   }, []);
 
   const login = (newToken, userData) => {
@@ -38,17 +45,20 @@ export function AuthProvider({ children }) {
         headers: { Authorization: `Bearer ${newToken}` }
       });
       const data = await res.json();
+
       const userData = {
-        id:      data.id,
-        name:    data.name,
-        email:   data.email,
-        role:    data.role,
-        picture: data.pictureUrl,
+        id:      data.id      || data._id        || data.userId,
+        name:    data.name    || data.displayName || data.fullName || data.username,
+        email:   data.email   || data.emailAddress,
+        role:    data.role    || data.userRole    || "user",
+        picture: data.picture || data.pictureUrl  || data.photoURL
+                 || data.avatar || data.avatar_url || data.photo || null,
       };
+
       localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
-    } catch {
-      // token is saved, user loads on next request
+    } catch (err) {
+      console.error("loginWithToken failed:", err);
     }
   };
 

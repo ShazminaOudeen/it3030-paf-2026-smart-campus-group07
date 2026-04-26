@@ -2,6 +2,7 @@ import { Sun, Moon, Bell, Search } from "lucide-react";
 import { useTheme } from "../../shared/context/ThemeContext";
 import { useAuth } from "../../shared/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { getUserDisplayName, getUserAvatar, getUserRole } from "../../shared/utils/userHelpers";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -20,8 +21,10 @@ export default function UserHeader() {
     navigate("/");
   };
 
-  const firstLetter = user?.name?.[0]?.toUpperCase() ?? "U";
-  const displayName = user?.name ?? "User";
+  const displayName = getUserDisplayName(user);
+  const avatarUrl = getUserAvatar(user);
+  const userRole = getUserRole(user);
+  const firstLetter = displayName[0].toUpperCase();
 
   return (
     <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-surface-border dark:border-white/[0.06]">
@@ -49,15 +52,13 @@ export default function UserHeader() {
       <button
         onClick={toggleTheme}
         className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-surface-muted dark:hover:bg-white/8 transition-colors"
-        aria-label="Toggle theme"
-      >
+        aria-label="Toggle theme">
         {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
       </button>
 
-      {/* User avatar + name + logout */}
       <div className="flex items-center gap-2.5 pl-3 border-l border-surface-border dark:border-white/[0.08]">
-        {user?.picture ? (
-          <img src={user.picture} alt={displayName}
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={displayName}
             className="w-8 h-8 rounded-full object-cover shadow-md"/>
         ) : (
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-amber-500/30">
@@ -67,7 +68,7 @@ export default function UserHeader() {
         <div className="hidden sm:block leading-none cursor-pointer"
           onClick={() => navigate("/user/account/profile")}>
           <p className="text-sm font-semibold text-gray-800 dark:text-white">{displayName}</p>
-          <p className="text-[10px] text-amber-400 font-mono">{user?.role ?? "USER"}</p>
+          <p className="text-[10px] text-amber-400 font-mono">{userRole}</p>
         </div>
         <button
           onClick={handleLogout}
