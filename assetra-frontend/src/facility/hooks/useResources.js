@@ -1,4 +1,4 @@
-// facility/hooks/useResources.js
+// facility/hooks/useResources.js.
 import { useState, useEffect, useCallback } from "react";
 import { facilitiesApi } from "../api/facilitiesApi";
 
