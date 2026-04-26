@@ -90,7 +90,7 @@ class ResourceControllerTest {
 
         when(resourceService.createResource(any())).thenReturn(resp);
 
-        mockMvc.perform(post("/api/resources")
+        mockMvc.perform(post("/resources")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
@@ -106,7 +106,7 @@ class ResourceControllerTest {
     void deleteResource_asAdmin_returns204() throws Exception {
         UUID id = UUID.randomUUID();
 
-        mockMvc.perform(delete("/api/resources/{id}", id).with(csrf()))
+        mockMvc.perform(delete("/resources/{id}", id).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -121,7 +121,7 @@ class ResourceControllerTest {
                 .capacity(20)
                 .build();
 
-        mockMvc.perform(post("/api/resources")
+        mockMvc.perform(post("/resources")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
