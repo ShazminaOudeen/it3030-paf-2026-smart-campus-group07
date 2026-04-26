@@ -108,7 +108,7 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
 
   // ─── Submit ─────────────────────────────────────────────────────────────────
 
-  const handleSubmit = async () => {
+ const handleSubmit = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
 
@@ -123,8 +123,6 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
         expectedAttendees: isRoom && form.expectedAttendees !== ""
                              ? Number(form.expectedAttendees)
                              : null,
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
 
       setSuccess(true);
