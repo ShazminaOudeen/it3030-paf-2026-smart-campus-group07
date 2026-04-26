@@ -40,46 +40,53 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
+        String email    = body.get("email");
         String password = body.get("password");
 
         User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("message", "Invalid email or password"));
-     }
+                    .body(Map.of("message", "Invalid email or password"));
+        }
 
         if (user.getPasswordHash() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("message", "This account uses OAuth login. Please use Google or GitHub to sign in."));
-     }
+                    .body(Map.of("message", "This account uses OAuth login. Please use Google or GitHub to sign in."));
+        }
 
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("message", "Invalid email or password"));
-     }
+                    .body(Map.of("message", "Invalid email or password"));
+        }
 
         String token = jwtService.generateToken(
-            user.getEmail(), user.getRole(), user.getId().toString());
+                user.getEmail(), user.getRole(), user.getId().toString());
 
+        // ✅ phone added
         return ResponseEntity.ok(new AuthResponse(
-            token, user.getEmail(), user.getName(),
-            user.getRole(), user.getPictureUrl(), user.getId().toString()));
+                token, user.getEmail(), user.getName(),
+                user.getRole(), user.getPictureUrl(),
+                user.getId().toString(), user.getPhone()));
     }
+
     @GetMapping("/generate-hash")
     public ResponseEntity<?> generateHash() {
         String hash = passwordEncoder.encode("Admin@123");
-    return ResponseEntity.ok(Map.of("hash", hash));
+        return ResponseEntity.ok(Map.of("hash", hash));
     }
+
     @GetMapping("/me")
     public ResponseEntity<?> me(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.substring(7);
         String email = jwtService.extractEmail(token);
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // ✅ phone added
         return ResponseEntity.ok(new AuthResponse(
                 token, user.getEmail(), user.getName(),
-                user.getRole(), user.getPictureUrl(), user.getId().toString()));
+                user.getRole(), user.getPictureUrl(),
+                user.getId().toString(), user.getPhone()));
     }
 }
