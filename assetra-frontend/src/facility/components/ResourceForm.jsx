@@ -1,4 +1,4 @@
-// facility/components/ResourceForm.jsx
+// facility/components/ResourceForm.jsx.
 import { useState } from "react";
 import { X, Loader2, Save, Building2 } from "lucide-react";
 
