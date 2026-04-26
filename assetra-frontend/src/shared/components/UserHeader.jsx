@@ -1,28 +1,19 @@
-import { Sun, Moon, Bell, Search, ChevronDown } from "lucide-react";
+import { Sun, Moon, Bell, Search } from "lucide-react";
 import { useTheme } from "../../shared/context/ThemeContext";
 import { useAuth } from "../../shared/context/AuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-function usePageTitle() {
-  const { pathname } = useLocation();
-  const map = {
-    "/user/dashboard":          "Dashboard",
-    "/user/resources":          "Browse Resources",
-    "/user/bookings/new":       "Make a Booking",
-    "/user/bookings":           "My Bookings",
-    "/user/maintenance/report": "Report an Issue",
-    "/user/maintenance":        "My Tickets",
-    "/user/notifications":      "Notifications",
-    "/user/account/profile":    "My Profile",
-  };
-  return map[pathname] ?? "Portal";
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 export default function UserHeader() {
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const pageTitle = usePageTitle();
 
   const handleLogout = () => {
     logout();
@@ -36,7 +27,7 @@ export default function UserHeader() {
     <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-surface-border dark:border-white/[0.06]">
       <div className="flex-1 min-w-0">
         <h1 className="text-gray-900 dark:text-white font-display font-semibold text-lg leading-none truncate">
-          {pageTitle}
+          {getGreeting()}, {displayName} 👋
         </h1>
         <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5 font-mono">
           Smart Campus Operations Hub
