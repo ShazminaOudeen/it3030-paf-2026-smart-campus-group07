@@ -3,7 +3,7 @@ import axios from "axios";
 
 const BASE = "/api/resources";
 
-// Call this once when the app loads / token changes
+// Call this once when the app loads / token changes.
 export function setAuthToken(token) {
   if (token) {
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
