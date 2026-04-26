@@ -24,23 +24,25 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                                         Authentication authentication) throws IOException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
-        // GitHub hides email if set to private — fall back to login@github.com
         String email = oAuth2User.getAttribute("email");
         if (email == null) {
             String login = oAuth2User.getAttribute("login");
             email = login + "@github.com";
         }
 
-        // GitHub sometimes returns null name — fall back to login username
         String name = oAuth2User.getAttribute("name");
         if (name == null) {
             name = oAuth2User.getAttribute("login");
         }
 
         String pictureUrl = oAuth2User.getAttribute("avatar_url");
+        if (pictureUrl == null) {
+            pictureUrl = oAuth2User.getAttribute("picture");
+        }
 
         final String finalEmail = email;
-        final String finalName  = name;
+        final String finalName = name;
+        final String finalPicture = pictureUrl;
 
         User user = userRepository.findByEmail(finalEmail)
                 .orElseGet(() -> {
@@ -48,8 +50,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     newUser.setName(finalName);
                     newUser.setEmail(finalEmail);
                     newUser.setRole("USER");
-                    newUser.setProvider("github");
-                    newUser.setPictureUrl(pictureUrl);
+                    newUser.setProvider("oauth2");
+                    newUser.setPictureUrl(finalPicture);
                     return userRepository.save(newUser);
                 });
 
@@ -57,6 +59,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 user.getEmail(), user.getRole(), user.getId().toString());
 
         String role = user.getRole().toUpperCase();
+
+        // Add CORS headers before redirect
+        response.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+
         String frontendUrl = "http://localhost:5173/oauth2/success?token=" + token + "&role=" + role;
         response.sendRedirect(frontendUrl);
     }

@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/tickets")
+@RequestMapping("/tickets")   // ← CHANGED from "/api/tickets"
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class TicketController {

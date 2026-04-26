@@ -42,17 +42,19 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                  "/auth/**",
-                  "/actuator/**",
-                  "/login/**",
-                  "/oauth2/**",
-                  "/error"
-             ).permitAll()
-            .requestMatchers("/users/**").hasAuthority("ROLE_ADMIN")
-            .anyRequest().authenticated()
+                    "/auth/**",
+                    "/actuator/**",
+                    "/login/**",
+                    "/oauth2/**",
+                    "/tickets/**",
+                    "/resources/**",
+                    "/bookings/**",
+                    "/error"
+                ).permitAll()
+                .requestMatchers("/users/**").hasAuthority("ROLE_ADMIN")
+                .anyRequest().authenticated()
             )
             .oauth2Login(oauth -> oauth
-                .loginPage("/login")
                 .userInfoEndpoint(u -> u.userService(customOAuth2UserService))
                 .successHandler(oAuth2SuccessHandler)
                 .failureUrl("http://localhost:5173/login?error=true")
@@ -65,9 +67,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins));
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174", "http://localhost:5175"));
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
