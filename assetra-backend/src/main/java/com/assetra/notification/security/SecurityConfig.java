@@ -48,7 +48,7 @@ public class SecurityConfig {
                   "/oauth2/**",
                   "/error"
              ).permitAll()
-            .requestMatchers("/users/**").hasAuthority("ROLE_ADMIN")
+             .requestMatchers("/users/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER", "ROLE_TECHNICIAN")
             .anyRequest().authenticated()
             )
             .oauth2Login(oauth -> oauth

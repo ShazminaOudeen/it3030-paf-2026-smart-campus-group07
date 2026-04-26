@@ -40,25 +40,22 @@ export default function AdminUserManagement() {
   const { token } = useAuth();
   const authHeader = { Authorization: `Bearer ${token}` };
 
-  const [users, setUsers]         = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState("");
-
-  // Search / filter
-  const [search, setSearch]       = useState("");
-  const [roleFilter, setRoleFilter] = useState("ALL");
-
-  // Create staff modal
-  const [showModal, setShowModal] = useState(false);
-  const [staffForm, setStaffForm] = useState(EMPTY_STAFF_FORM);
-  const [formErrors, setFormErrors] = useState({});
-  const [creating, setCreating]   = useState(false);
+  const [users, setUsers]             = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState("");
+  const [search, setSearch]           = useState("");
+  const [roleFilter, setRoleFilter]   = useState("ALL");
+  const [showModal, setShowModal]     = useState(false);
+  const [staffForm, setStaffForm]     = useState(EMPTY_STAFF_FORM);
+  const [formErrors, setFormErrors]   = useState({});
+  const [creating, setCreating]       = useState(false);
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState("");
+  const [deleteTarget, setDeleteTarget]   = useState(null);
+  const [deleting, setDeleting]           = useState(false);
 
-  // Delete confirm
-  const [deleteTarget, setDeleteTarget] = useState(null); // user object
-  const [deleting, setDeleting]         = useState(false);
+  // ✅ FIXED — was outside the component before, causing the crash
+  const [showStaffPassword, setShowStaffPassword] = useState(false);
 
   // ── Fetch users ──
   const fetchUsers = async () => {
@@ -91,27 +88,33 @@ export default function AdminUserManagement() {
 
   // ── Stats ──
   const stats = useMemo(() => ({
-    total:      users.length,
-    users:      users.filter(u => u.role === "USER").length,
-    technicians:users.filter(u => u.role === "TECHNICIAN").length,
-    admins:     users.filter(u => u.role === "ADMIN").length,
+    total:       users.length,
+    users:       users.filter(u => u.role === "USER").length,
+    technicians: users.filter(u => u.role === "TECHNICIAN").length,
+    admins:      users.filter(u => u.role === "ADMIN").length,
   }), [users]);
 
-  // ── Create staff ──
+  // ── Validate staff form ──
   const validateStaff = () => {
     const e = {};
-    if (!staffForm.name.trim())     e.name = "Name is required";
-    if (!staffForm.email.trim())    e.email = "Email is required";
+    if (!staffForm.name.trim())  e.name = "Name is required";
+    else if (/\d/.test(staffForm.name)) e.name = "Name cannot contain numbers";
+    else if (/[^a-zA-Z\s]/.test(staffForm.name)) e.name = "Name cannot contain special characters";
+
+    if (!staffForm.email.trim()) e.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(staffForm.email)) e.email = "Invalid email";
-    if (!staffForm.phone.trim())    e.phone = "Phone is required";
-    else if (!/^07\d{8}$/.test(staffForm.phone.replace(/\s/g, ""))) e.phone = "Must start with 07 and be 10 digits";
-    if (!staffForm.password)        e.password = "Password is required";
-    else if (staffForm.password.length < 6) e.password = "Min 6 characters";
-    else if (!/[A-Z]/.test(staffForm.password)) e.password = "Must have an uppercase letter";
-    else if (!/[0-9]/.test(staffForm.password)) e.password = "Must have a number";
+
+    if (!staffForm.phone.trim()) e.phone = "Phone is required";
+    else if (!/^07\d{8}$/.test(staffForm.phone.replace(/\s/g, ""))) e.phone = "Must start with 07 and be exactly 10 digits";
+
+    if (!staffForm.password)     e.password = "Password is required";
+    else if (staffForm.password.length < 6)      e.password = "Min 6 characters";
+    else if (!/[A-Z]/.test(staffForm.password))  e.password = "Must have an uppercase letter";
+    else if (!/[0-9]/.test(staffForm.password))  e.password = "Must have a number";
     return e;
   };
 
+  // ── Create staff ──
   const handleCreateStaff = async (e) => {
     e.preventDefault();
     setCreateError("");
@@ -148,7 +151,7 @@ export default function AdminUserManagement() {
     }
   };
 
-  // ── Input helper ──
+  // ── Input style helper ──
   const inputCls = (hasErr) =>
     `w-full bg-gray-50 dark:bg-white/5 border rounded-xl py-2.5 pl-3 pr-4 text-sm
      text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600
@@ -168,7 +171,8 @@ export default function AdminUserManagement() {
             Manage all registered users, technicians, and administrators.
           </p>
         </div>
-        <button onClick={() => { setShowModal(true); setCreateError(""); setCreateSuccess(""); setFormErrors({}); }}
+        <button
+          onClick={() => { setShowModal(true); setCreateError(""); setCreateSuccess(""); setFormErrors({}); }}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600
                      text-white text-sm font-semibold shadow-lg shadow-orange-500/25
                      transition-all duration-200 hover:shadow-orange-500/40 self-start sm:self-auto">
@@ -182,10 +186,10 @@ export default function AdminUserManagement() {
       {/* ── Stats row ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Users", value: stats.total, color: "text-gray-900 dark:text-white", bg: "bg-white dark:bg-gray-900" },
-          { label: "Regular Users", value: stats.users, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10" },
-          { label: "Technicians", value: stats.technicians, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" },
-          { label: "Admins", value: stats.admins, color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-500/10" },
+          { label: "Total Users",    value: stats.total,       color: "text-gray-900 dark:text-white" },
+          { label: "Regular Users",  value: stats.users,       color: "text-orange-500" },
+          { label: "Technicians",    value: stats.technicians, color: "text-blue-500" },
+          { label: "Admins",         value: stats.admins,      color: "text-purple-500" },
         ].map(s => (
           <div key={s.label}
             className="rounded-xl border border-gray-200 dark:border-white/8 bg-white dark:bg-gray-900/50 p-4">
@@ -197,23 +201,20 @@ export default function AdminUserManagement() {
 
       {/* ── Search + filter ── */}
       <div className="flex flex-col sm:flex-row gap-3">
-        {/* Search */}
         <div className="relative flex-1">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35"/>
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <circle cx="11" cy="11" r="8"/>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35"/>
           </svg>
-          <input
-            type="text"
-            placeholder="Search by name, email, or phone..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
+          <input type="text" placeholder="Search by name, email, or phone..."
+            value={search} onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10
                        bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white
                        placeholder-gray-400 dark:placeholder-gray-500 text-sm
                        focus:outline-none focus:border-orange-500/60 dark:focus:border-orange-500/50 transition-all"/>
         </div>
 
-        {/* Role filter */}
         <div className="flex gap-2 flex-wrap">
           {["ALL", "USER", "TECHNICIAN", "ADMIN"].map(r => (
             <button key={r} onClick={() => setRoleFilter(r)}
@@ -231,7 +232,6 @@ export default function AdminUserManagement() {
       {/* ── Users table ── */}
       <div className="rounded-2xl border border-gray-200 dark:border-white/8 bg-white dark:bg-gray-900/50 overflow-hidden">
 
-        {/* Table header */}
         <div className="grid grid-cols-[2fr_2fr_1.2fr_1fr_80px] gap-4 px-5 py-3
                         border-b border-gray-100 dark:border-white/8
                         bg-gray-50 dark:bg-white/[0.03]">
@@ -242,7 +242,6 @@ export default function AdminUserManagement() {
           ))}
         </div>
 
-        {/* Rows */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <svg className="animate-spin w-6 h-6 text-orange-500" fill="none" viewBox="0 0 24 24">
@@ -253,7 +252,9 @@ export default function AdminUserManagement() {
         ) : error ? (
           <div className="flex items-center justify-center gap-2 py-16 text-red-400 text-sm">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
             {error}
             <button onClick={fetchUsers} className="ml-2 underline hover:text-red-300">Retry</button>
@@ -271,31 +272,22 @@ export default function AdminUserManagement() {
               <div key={u.id}
                 className="grid grid-cols-[2fr_2fr_1.2fr_1fr_80px] gap-4 px-5 py-4 items-center
                            hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors duration-150">
-
-                {/* Name + avatar */}
                 <div className="flex items-center gap-3 min-w-0">
                   <Avatar name={u.name} pictureUrl={u.pictureUrl}/>
                   <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{u.name}</span>
                 </div>
-
-                {/* Email */}
                 <span className="text-sm text-gray-500 dark:text-gray-400 truncate">{u.email}</span>
-
-                {/* Phone */}
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   {u.phone || <span className="text-gray-300 dark:text-gray-600 italic">—</span>}
                 </span>
-
-                {/* Role badge */}
                 <RoleBadge role={u.role}/>
-
-                {/* Delete */}
                 <button onClick={() => setDeleteTarget(u)}
                   className="inline-flex items-center justify-center w-8 h-8 rounded-lg
                              text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10
                              transition-all duration-200">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <polyline points="3 6 5 6 21 6"/><path strokeLinecap="round" strokeLinejoin="round" d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4h4v2"/>
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4h4v2"/>
                   </svg>
                 </button>
               </div>
@@ -303,7 +295,6 @@ export default function AdminUserManagement() {
           </div>
         )}
 
-        {/* Footer count */}
         {!loading && !error && (
           <div className="px-5 py-3 border-t border-gray-100 dark:border-white/8 bg-gray-50/50 dark:bg-white/[0.01]">
             <p className="text-xs text-gray-400 dark:text-gray-500">
@@ -313,40 +304,28 @@ export default function AdminUserManagement() {
         )}
       </div>
 
-      {/* ══════════════════════════════════════════
-          Create Staff Modal
-      ══════════════════════════════════════════ */}
+      {/* ══ Create Staff Modal ══ */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowModal(false)}/>
-
-          {/* Modal card */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)}/>
           <div className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl
-                          border border-gray-200 dark:border-white/10 shadow-2xl
-                          animate-scale-in">
-
-            {/* Top shimmer */}
+                          border border-gray-200 dark:border-white/10 shadow-2xl animate-scale-in">
             <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-orange-500/40 to-transparent"/>
 
-            {/* Header */}
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-white/8">
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">Add Staff Account</h2>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
-                  Create a Technician or Admin account
-                </p>
+                <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">Create a Technician or Admin account</p>
               </div>
               <button onClick={() => setShowModal(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/8 transition">
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400
+                           hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/8 transition">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path d="M6 18L18 6M6 6l12 12"/>
                 </svg>
               </button>
             </div>
 
-            {/* Form body */}
             <form onSubmit={handleCreateStaff} className="px-6 py-5 space-y-4">
 
               {/* Role selector */}
@@ -402,14 +381,24 @@ export default function AdminUserManagement() {
               {/* Password */}
               <div>
                 <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">Password</label>
-                <input type="password" placeholder="Min 6 chars, 1 uppercase, 1 number"
-                  value={staffForm.password}
-                  onChange={e => { setStaffForm(f => ({ ...f, password: e.target.value })); setFormErrors(fe => ({ ...fe, password: "" })); }}
-                  className={inputCls(!!formErrors.password)}/>
+                <div className="relative">
+                  <input
+                    type={showStaffPassword ? "text" : "password"}
+                    placeholder="Min 6 chars, 1 uppercase, 1 number"
+                    value={staffForm.password}
+                    onChange={e => { setStaffForm(f => ({ ...f, password: e.target.value })); setFormErrors(fe => ({ ...fe, password: "" })); }}
+                    className={inputCls(!!formErrors.password) + " pr-10"}/>
+                  <button type="button" onClick={() => setShowStaffPassword(p => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+                    {showStaffPassword
+                      ? <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                      : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    }
+                  </button>
+                </div>
                 {formErrors.password && <p className="mt-1 text-xs text-red-500">{formErrors.password}</p>}
               </div>
 
-              {/* API errors / success */}
               {createError && (
                 <div className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm">
                   {createError}
@@ -424,7 +413,6 @@ export default function AdminUserManagement() {
                 </div>
               )}
 
-              {/* Actions */}
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowModal(false)}
                   className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-white/10
@@ -454,13 +442,10 @@ export default function AdminUserManagement() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════
-          Delete Confirm Modal
-      ══════════════════════════════════════════ */}
+      {/* ══ Delete Confirm Modal ══ */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setDeleteTarget(null)}/>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeleteTarget(null)}/>
           <div className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl
                           border border-gray-200 dark:border-white/10 shadow-2xl p-6 animate-scale-in">
             <div className="flex flex-col items-center text-center gap-3">
@@ -472,7 +457,8 @@ export default function AdminUserManagement() {
               <div>
                 <h3 className="text-base font-bold text-gray-900 dark:text-white">Delete User</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Are you sure you want to delete <span className="font-semibold text-gray-700 dark:text-gray-200">{deleteTarget.name}</span>?
+                  Are you sure you want to delete{" "}
+                  <span className="font-semibold text-gray-700 dark:text-gray-200">{deleteTarget.name}</span>?
                   This action cannot be undone.
                 </p>
               </div>
