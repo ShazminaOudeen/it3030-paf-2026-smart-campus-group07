@@ -1,9 +1,5 @@
 
 import { useState, useEffect } from "react";
-
-//assetra-frontend/src/incident/pages/ReportIssuePage.jsx
-import { useState } from "react";
-
 import { useNavigate } from "react-router-dom";
 import { createTicket } from "../api/ticketApi";
 
@@ -130,7 +126,6 @@ export default function ReportIssuePage() {
         .input-field option { background: #1a1a2e; color: white; }
       `}</style>
 
-      {/* Header */}
       <div className="fade-up mb-8">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
@@ -143,8 +138,6 @@ export default function ReportIssuePage() {
             <p className="text-gray-400 text-sm">Describe the problem and we'll get it fixed</p>
           </div>
         </div>
-
-        {/* Progress bar */}
         <div className="flex gap-2 mt-4">
           {[1, 2, 3].map((s) => (
             <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-500 ${step >= s ? "bg-orange-500" : "bg-white/10"}`} />
@@ -163,16 +156,15 @@ export default function ReportIssuePage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
 
-        {/* Resource Selection */}
         <div className="fade-up-1">
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Affected Resource *
+            Affected Resource
+            <span className="text-gray-500 ml-1">(optional until resources are added)</span>
           </label>
           <select
             name="resourceId"
             value={form.resourceId}
             onChange={(e) => { handleChange(e); setStep(Math.max(step, 2)); }}
-            required
             className="input-field"
           >
             <option value="">Select a resource (lab, room, equipment...)</option>
@@ -191,76 +183,62 @@ export default function ReportIssuePage() {
           </p>
         </div>
 
-        {/* Category */}
         <div className="fade-up-2">
           <label className="block text-sm font-medium text-gray-300 mb-2">Category *</label>
           <div className="grid grid-cols-3 gap-2">
             {CATEGORIES.map((c) => (
-              <button
-                key={c} type="button"
+              <button key={c} type="button"
                 onClick={() => { setForm({ ...form, category: c }); setStep(Math.max(step, 2)); }}
                 className={`py-2.5 px-3 rounded-xl text-sm font-medium border transition-all duration-200
                   ${form.category === c
                     ? "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/25"
                     : "bg-white/4 border-white/8 text-gray-400 hover:border-orange-500/40 hover:text-orange-400 hover:bg-orange-500/5"
-                  }`}
-              >
+                  }`}>
                 {c}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Description */}
         <div className="fade-up-3">
           <label className="block text-sm font-medium text-gray-300 mb-2">Description *</label>
           <textarea
-            name="description"
-            value={form.description}
+            name="description" value={form.description}
             onChange={(e) => { handleChange(e); setStep(Math.max(step, 2)); }}
-            required
-            rows={4}
+            required rows={4}
             placeholder="Describe the issue in detail — what happened, when it started..."
             className="input-field resize-none"
           />
           <p className="text-xs text-gray-500 mt-1">{form.description.length} characters</p>
         </div>
 
-        {/* Priority */}
         <div className="fade-up-4">
           <label className="block text-sm font-medium text-gray-300 mb-2">Priority *</label>
           <div className="grid grid-cols-4 gap-2">
             {PRIORITIES.map((p) => (
-              <button
-                key={p.value} type="button"
+              <button key={p.value} type="button"
                 onClick={() => setForm({ ...form, priority: p.value })}
                 className={`py-2.5 rounded-xl text-xs font-semibold border transition-all duration-200
                   ${form.priority === p.value
                     ? `bg-gradient-to-r ${p.color} text-white border-transparent shadow-lg`
                     : `${p.bg} border hover:scale-105`
-                  }`}
-              >
+                  }`}>
                 {p.value}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Contact */}
         <div className="fade-up-5">
           <label className="block text-sm font-medium text-gray-300 mb-2">Contact Details *</label>
           <input
-            type="text"
-            name="contactDetails"
-            value={form.contactDetails}
+            type="text" name="contactDetails" value={form.contactDetails}
             onChange={(e) => { handleChange(e); setStep(Math.max(step, 3)); }}
-            required
-            placeholder="Your phone number or email address"
+            required placeholder="Your phone number or email address"
             className="input-field"
           />
         </div>
 
-        {/* File Upload */}
         <div className="fade-up-6">
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Attach Evidence <span className="text-gray-500">(max 3 images)</span>
@@ -281,15 +259,11 @@ export default function ReportIssuePage() {
           </label>
         </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={loading}
+        <button type="submit" disabled={loading}
           className="w-full py-3.5 rounded-xl text-white font-semibold text-sm
                      shimmer-btn shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40
                      hover:scale-[1.02] active:scale-[0.98]
-                     disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-        >
+                     disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200">
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
