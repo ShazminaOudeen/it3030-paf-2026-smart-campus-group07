@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAllTickets, assignTechnician } from "../api/ticketApi";
+import { getTechnicians } from "../api/ticketApi";
 
 const PRIORITY_COLORS = {
   LOW: "text-emerald-400 bg-emerald-500/10",
@@ -10,35 +11,53 @@ const PRIORITY_COLORS = {
 
 export default function AdminAssignTechnicianPage() {
   const [tickets, setTickets] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [technicianId, setTechnicianId] = useState("");
+  const [selectedTechId, setSelectedTechId] = useState("");
   const [assigning, setAssigning] = useState(null);
   const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    getAllTickets()
-      .then((res) => setTickets(res.data.filter((t) => t.status === "OPEN")))
-      .catch(() => setTickets([]))
+    Promise.all([
+      getAllTickets().then((res) =>
+        setTickets(res.data.filter((t) => t.status === "OPEN"))
+      ),
+      getTechnicians().then((data) => setTechnicians(data)),
+    ])
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
   const handleAssign = async (ticketId) => {
-    if (!technicianId.trim()) { alert("Please enter a technician ID"); return; }
+    if (!selectedTechId) {
+      setError("Please select a technician from the dropdown");
+      return;
+    }
     setAssigning(ticketId);
+    setError("");
     try {
-      await assignTechnician(ticketId, technicianId);
+      await assignTechnician(ticketId, selectedTechId);
       setTickets((prev) => prev.filter((t) => t.id !== ticketId));
       setSuccess("Technician assigned successfully!");
+      setSelectedTechId("");
       setTimeout(() => setSuccess(""), 3000);
-    } catch { alert("Failed to assign technician"); }
-    finally { setAssigning(null); }
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          "Failed to assign technician. Please try again."
+      );
+    } finally {
+      setAssigning(null);
+    }
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-10 h-10 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-10 h-10 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+      </div>
+    );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -48,47 +67,78 @@ export default function AdminAssignTechnicianPage() {
         .ticket-row { animation: fadeUp 0.3s ease both; }
       `}</style>
 
+      {/* Header */}
       <div className="fade-up mb-8">
         <div className="flex items-center gap-3 mb-1">
           <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
             <svg className="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">Assign Technician</h1>
-            <p className="text-gray-400 text-sm">{tickets.length} open tickets awaiting assignment</p>
+            <p className="text-gray-400 text-sm">
+              {tickets.length} open tickets awaiting assignment
+            </p>
           </div>
         </div>
       </div>
 
+      {/* Success banner */}
       {success && (
         <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm flex items-center gap-2">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           {success}
         </div>
       )}
 
-      {/* Technician ID input */}
+      {/* Error banner */}
+      {error && (
+        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
+          <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          {error}
+        </div>
+      )}
+
+      {/* Technician Dropdown */}
       <div className="fade-up p-5 rounded-2xl border border-white/8 bg-white/4 mb-6">
         <label className="block text-sm font-medium text-gray-300 mb-2">
-          Technician ID <span className="text-gray-500">(UUID)</span>
+          Select Technician
         </label>
-        <div className="flex gap-3">
-          <input
-            type="text" value={technicianId}
-            onChange={(e) => setTechnicianId(e.target.value)}
-            placeholder="e.g. 00000000-0000-0000-0000-000000000002"
-            className="flex-1 px-4 py-2.5 rounded-xl border border-white/8 bg-white/4
-                       text-white text-sm placeholder-gray-600
-                       focus:outline-none focus:border-orange-500/50 focus:bg-orange-500/5 transition-all"
-          />
-        </div>
-        <p className="text-xs text-gray-600 mt-2">Enter the technician's UUID then click Assign on any ticket below</p>
+
+        {technicians.length === 0 ? (
+          <div className="px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm">
+            No technicians found. Ask admin to register technician accounts first.
+          </div>
+        ) : (
+          <select
+            value={selectedTechId}
+            onChange={(e) => { setSelectedTechId(e.target.value); setError(""); }}
+            className="w-full px-4 py-2.5 rounded-xl border border-white/8 bg-[#0f1117]
+                       text-white text-sm focus:outline-none focus:border-orange-500/50
+                       focus:bg-orange-500/5 transition-all cursor-pointer"
+          >
+            <option value="" disabled>— Choose a technician —</option>
+            {technicians.map((tech) => (
+              <option key={tech.id} value={tech.id}>
+                {tech.name} ({tech.email})
+              </option>
+            ))}
+          </select>
+        )}
+
+        <p className="text-xs text-gray-600 mt-2">
+          Select a technician then click Assign on any ticket below
+        </p>
       </div>
 
+      {/* Tickets list */}
       {tickets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
@@ -104,9 +154,11 @@ export default function AdminAssignTechnicianPage() {
           {tickets.map((ticket, i) => {
             const pc = PRIORITY_COLORS[ticket.priority] || PRIORITY_COLORS.MEDIUM;
             return (
-              <div key={ticket.id}
+              <div
+                key={ticket.id}
                 className="ticket-row p-5 rounded-2xl border border-white/8 bg-white/4
-                           hover:border-orange-500/20 transition-all duration-200 flex items-center justify-between gap-4"
+                           hover:border-orange-500/20 transition-all duration-200
+                           flex items-center justify-between gap-4"
                 style={{ animationDelay: `${i * 0.05}s` }}
               >
                 <div className="flex-1 min-w-0">
@@ -117,23 +169,30 @@ export default function AdminAssignTechnicianPage() {
                     </span>
                   </div>
                   <p className="text-sm text-gray-400 truncate mb-1">{ticket.description}</p>
-                  <p className="text-xs text-gray-600">{new Date(ticket.createdAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-600">
+                    {new Date(ticket.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
                 <button
                   onClick={() => handleAssign(ticket.id)}
-                  disabled={assigning === ticket.id}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600
-                             text-white text-sm font-semibold transition-all hover:scale-105
-                             disabled:opacity-50 whitespace-nowrap shadow-lg shadow-orange-500/20"
+                  disabled={assigning === ticket.id || !selectedTechId}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500
+                             hover:bg-orange-600 text-white text-sm font-semibold
+                             transition-all hover:scale-105 disabled:opacity-40
+                             disabled:cursor-not-allowed whitespace-nowrap
+                             shadow-lg shadow-orange-500/20"
                 >
                   {assigning === ticket.id ? (
                     <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      <circle className="opacity-25" cx="12" cy="12" r="10"
+                        stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
                   ) : (
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   )}
                   {assigning === ticket.id ? "Assigning..." : "Assign"}
