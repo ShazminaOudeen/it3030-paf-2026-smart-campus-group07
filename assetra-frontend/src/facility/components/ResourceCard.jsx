@@ -1,4 +1,4 @@
-// facility/components/ResourceCard.jsx
+// facility/components/ResourceCard.jsx.
 import { MapPin, Users, Clock, Layers, ChevronRight } from "lucide-react";
 
 const TYPE_LABELS = {

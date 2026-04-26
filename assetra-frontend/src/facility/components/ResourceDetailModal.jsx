@@ -1,4 +1,4 @@
-// facility/components/ResourceDetailModal.jsx
+// facility/components/ResourceDetailModal.jsx.
 import { X, MapPin, Users, Clock, Calendar, AlertTriangle, CheckCircle2, Wrench } from "lucide-react";
 import { StatusBadge } from "./ResourceCard";
 
