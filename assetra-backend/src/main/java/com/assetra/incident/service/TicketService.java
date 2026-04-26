@@ -3,9 +3,12 @@ package com.assetra.incident.service;
 import com.assetra.incident.dto.*;
 import com.assetra.incident.entity.*;
 import com.assetra.incident.repository.*;
+import com.assetra.notification.service.NotificationService;
+import com.assetra.shared.enums.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
@@ -20,9 +23,11 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketImageRepository ticketImageRepository;
     private final CommentRepository commentRepository;
+    private final NotificationService notificationService; // ← injected
 
     private final String uploadDir = "uploads/tickets/";
 
+    // ── CREATE TICKET ──────────────────────────────────────────────────────────
     public TicketResponseDTO createTicket(TicketRequestDTO dto, UUID userId,
                                           List<MultipartFile> files) throws IOException {
         if (files != null && files.size() > 3) {
@@ -48,6 +53,7 @@ public class TicketService {
         return mapToDTO(saved);
     }
 
+    // ── SAVE IMAGE ─────────────────────────────────────────────────────────────
     private void saveImage(MultipartFile file, Ticket ticket) throws IOException {
         Path uploadPath = Paths.get(uploadDir);
         if (!Files.exists(uploadPath)) Files.createDirectories(uploadPath);
@@ -62,6 +68,7 @@ public class TicketService {
         ticketImageRepository.save(image);
     }
 
+    // ── READ ───────────────────────────────────────────────────────────────────
     public List<TicketResponseDTO> getAllTickets() {
         return ticketRepository.findAll().stream()
                 .map(this::mapToDTO).collect(Collectors.toList());
@@ -78,36 +85,82 @@ public class TicketService {
         return mapToDTO(ticket);
     }
 
+    // ── ASSIGN TECHNICIAN ──────────────────────────────────────────────────────
     public TicketResponseDTO assignTechnician(UUID ticketId, UUID technicianId) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
         ticket.setAssignedTo(technicianId);
         ticket.setStatus("IN_PROGRESS");
-        return mapToDTO(ticketRepository.save(ticket));
+        Ticket saved = ticketRepository.save(ticket);
+
+        // Notify the ticket owner that their ticket is now in progress
+        notificationService.createNotification(
+            ticket.getUserId(),
+            NotificationType.TICKET_UPDATED,
+            "Your ticket \"" + truncate(ticket.getDescription()) + "\" is now IN_PROGRESS — a technician has been assigned.",
+            ticket.getId(),
+            "TICKET"
+        );
+
+        return mapToDTO(saved);
     }
 
+    // ── UPDATE STATUS ──────────────────────────────────────────────────────────
     public TicketResponseDTO updateStatus(UUID ticketId, String status,
                                           String notes, String reason) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        String oldStatus = ticket.getStatus();
         ticket.setStatus(status);
-        if (notes != null) ticket.setResolutionNotes(notes);
+        if (notes != null)  ticket.setResolutionNotes(notes);
         if (reason != null) ticket.setRejectionReason(reason);
-        return mapToDTO(ticketRepository.save(ticket));
+        Ticket saved = ticketRepository.save(ticket);
+
+        // Only notify if the status actually changed
+        if (!status.equals(oldStatus)) {
+            String statusMessage = buildStatusMessage(ticket, status, reason);
+            notificationService.createNotification(
+                ticket.getUserId(),
+                NotificationType.TICKET_UPDATED,
+                statusMessage,
+                ticket.getId(),
+                "TICKET"
+            );
+        }
+
+        return mapToDTO(saved);
     }
 
+    // ── ADD COMMENT ────────────────────────────────────────────────────────────
     public CommentResponseDTO addComment(UUID ticketId, UUID userId, String content) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
         Comment comment = new Comment();
         comment.setTicket(ticket);
         comment.setUserId(userId);
         comment.setContent(content);
         comment.setCreatedAt(LocalDateTime.now());
         comment.setUpdatedAt(LocalDateTime.now());
-        return mapCommentToDTO(commentRepository.save(comment));
+        CommentResponseDTO saved = mapCommentToDTO(commentRepository.save(comment));
+
+        // Notify the ticket owner — but only if the commenter is someone else
+        if (!ticket.getUserId().equals(userId)) {
+            notificationService.createNotification(
+                ticket.getUserId(),
+                NotificationType.COMMENT_ADDED,
+                "A new comment was added to your ticket: \"" + truncate(content) + "\"",
+                ticket.getId(),
+                "TICKET"
+            );
+        }
+
+        return saved;
     }
 
+    // ── UPDATE COMMENT ─────────────────────────────────────────────────────────
     public CommentResponseDTO updateComment(UUID commentId, UUID userId, String content) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
@@ -119,6 +172,7 @@ public class TicketService {
         return mapCommentToDTO(commentRepository.save(comment));
     }
 
+    // ── DELETE COMMENT ─────────────────────────────────────────────────────────
     public void deleteComment(UUID commentId, UUID userId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
@@ -128,9 +182,31 @@ public class TicketService {
         commentRepository.delete(comment);
     }
 
+    // ── GET COMMENTS ───────────────────────────────────────────────────────────
     public List<CommentResponseDTO> getComments(UUID ticketId) {
         return commentRepository.findByTicketId(ticketId).stream()
                 .map(this::mapCommentToDTO).collect(Collectors.toList());
+    }
+
+    // ── HELPERS ────────────────────────────────────────────────────────────────
+    private String buildStatusMessage(Ticket ticket, String status, String reason) {
+        String desc = truncate(ticket.getDescription());
+        return switch (status.toUpperCase()) {
+            case "IN_PROGRESS" -> "Your ticket \"" + desc + "\" is now IN_PROGRESS.";
+            case "RESOLVED"    -> "Your ticket \"" + desc + "\" has been RESOLVED. "
+                                  + (ticket.getResolutionNotes() != null
+                                     ? "Notes: " + truncate(ticket.getResolutionNotes()) : "");
+            case "CLOSED"      -> "Your ticket \"" + desc + "\" has been CLOSED.";
+            case "REJECTED"    -> "Your ticket \"" + desc + "\" was REJECTED. "
+                                  + (reason != null ? "Reason: " + reason : "");
+            default            -> "Your ticket \"" + desc + "\" status changed to " + status + ".";
+        };
+    }
+
+    /** Truncates long strings for notification messages */
+    private String truncate(String text) {
+        if (text == null) return "";
+        return text.length() > 60 ? text.substring(0, 57) + "..." : text;
     }
 
     private TicketResponseDTO mapToDTO(Ticket t) {

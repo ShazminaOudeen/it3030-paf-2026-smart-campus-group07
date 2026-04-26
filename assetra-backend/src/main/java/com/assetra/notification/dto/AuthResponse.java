@@ -12,4 +12,5 @@ public class AuthResponse {
     private String role;
     private String picture;
     private String id;
+    private String phone; // ← ADD THIS
 }

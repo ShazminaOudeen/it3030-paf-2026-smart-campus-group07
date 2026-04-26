@@ -30,17 +30,21 @@ const ROLE_CONFIG = {
 };
 
 export default function RoleLoginPage() {
-  const { role } = useParams();
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  const config = ROLE_CONFIG[role] || ROLE_CONFIG.user;
+  const { role }    = useParams();
+  const navigate    = useNavigate();
+  const { login }   = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const config      = ROLE_CONFIG[role] || ROLE_CONFIG.user;
 
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [showPassword, setShow] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [form, setForm]           = useState({ email: "", password: "" });
+  const [showPassword, setShow]   = useState(false);
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState("");
 
-  const handleChange = (e) => { setForm({ ...form, [e.target.name]: e.target.value }); setError(""); };
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setError("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,10 +57,21 @@ export default function RoleLoginPage() {
         setError(`This account is not registered as ${config.label}. Please use the correct login portal.`);
         return;
       }
-      login(data.token, { id: data.id, name: data.name, email: data.email, role: data.role, picture: data.picture });
-      if (data.role === "ADMIN") navigate("/admin/dashboard", { replace: true });
+
+      // ✅ phone now included — persists after logout/login
+      login(data.token, {
+        id:      data.id,
+        name:    data.name,
+        email:   data.email,
+        role:    data.role,
+        picture: data.picture,
+        phone:   data.phone,
+      });
+
+      if (data.role === "ADMIN")           navigate("/admin/dashboard",      { replace: true });
       else if (data.role === "TECHNICIAN") navigate("/technician/dashboard", { replace: true });
-      else navigate("/user/dashboard", { replace: true });
+      else                                 navigate("/user/dashboard",        { replace: true });
+
     } catch (err) {
       setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
@@ -75,7 +90,8 @@ export default function RoleLoginPage() {
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        <Link to="/login" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm mb-8 transition-colors">
+        <Link to="/login"
+          className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm mb-8 transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
           </svg>
@@ -107,7 +123,11 @@ export default function RoleLoginPage() {
               <>
                 <div className="flex gap-3 mb-6">
                   <button onClick={handleGoogle}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-orange-500/30 transition-all text-sm text-gray-300 font-medium">
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl
+                               border border-gray-200 dark:border-white/10
+                               bg-gray-100 dark:bg-white/5
+                               hover:bg-gray-200 dark:hover:bg-white/10 hover:border-orange-500/30
+                               transition-all text-sm text-gray-700 dark:text-gray-300 font-medium">
                     <svg className="w-4 h-4" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -117,8 +137,12 @@ export default function RoleLoginPage() {
                     Google
                   </button>
                   <button onClick={handleGithub}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-orange-500/30 transition-all text-sm text-gray-300 font-medium">
-                    <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl
+                               border border-gray-200 dark:border-white/10
+                               bg-gray-100 dark:bg-white/5
+                               hover:bg-gray-200 dark:hover:bg-white/10 hover:border-orange-500/30
+                               transition-all text-sm text-gray-700 dark:text-gray-300 font-medium">
+                    <svg className="w-4 h-4 text-gray-900 dark:text-white" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
                     </svg>
                     GitHub
@@ -135,7 +159,9 @@ export default function RoleLoginPage() {
             {error && (
               <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
                 <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 {error}
               </div>
@@ -145,24 +171,33 @@ export default function RoleLoginPage() {
               <div>
                 <label className="text-sm text-gray-400 mb-1.5 block">Email Address</label>
                 <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                   </svg>
                   <input type="email" name="email" value={form.email} onChange={handleChange}
                     placeholder="name@domain.com"
-                    className={`w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 text-sm focus:outline-none ${config.borderFocus} transition-all`}/>
+                    className={`w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10
+                      rounded-xl py-3 pl-10 pr-4 text-gray-900 dark:text-white
+                      placeholder-gray-400 dark:placeholder-gray-600 text-sm
+                      focus:outline-none ${config.borderFocus} transition-all`}/>
                 </div>
               </div>
 
               <div>
                 <label className="text-sm text-gray-400 mb-1.5 block">Password</label>
                 <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M7 11V7a5 5 0 0110 0v4"/>
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 11V7a5 5 0 0110 0v4"/>
                   </svg>
                   <input type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange}
                     placeholder="Enter your password"
-                    className={`w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white placeholder-gray-600 text-sm focus:outline-none ${config.borderFocus} transition-all`}/>
+                    className={`w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10
+                      rounded-xl py-3 pl-10 pr-10 text-gray-900 dark:text-white
+                      placeholder-gray-400 dark:placeholder-gray-600 text-sm
+                      focus:outline-none ${config.borderFocus} transition-all`}/>
                   <button type="button" onClick={() => setShow(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition">
                     {showPassword
@@ -174,7 +209,9 @@ export default function RoleLoginPage() {
               </div>
 
               <button type="submit" disabled={loading}
-                className={`w-full py-3 rounded-xl text-white font-semibold text-sm shadow-lg transition-all duration-200 mt-2 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed ${config.btnClass}`}>
+                className={`w-full py-3 rounded-xl text-white font-semibold text-sm shadow-lg
+                  transition-all duration-200 mt-2 relative overflow-hidden group
+                  disabled:opacity-50 disabled:cursor-not-allowed ${config.btnClass}`}>
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"/>
                 {loading
                   ? <span className="flex items-center justify-center gap-2">
@@ -201,7 +238,10 @@ export default function RoleLoginPage() {
             <div className={`absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent ${config.glowClass} to-transparent`}/>
           </div>
         </div>
-        <p className="text-center text-gray-600 text-xs mt-6">Assetra © 2026 · Smart Campus Operations Hub</p>
+
+        <p className="text-center text-gray-400 dark:text-gray-600 text-xs mt-6">
+          Assetra © 2026 · Smart Campus Operations Hub
+        </p>
       </div>
     </div>
   );
