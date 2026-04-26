@@ -106,7 +106,7 @@ export default function App() {
               <Route path="tickets/assigned"    element={<TechnicianAssignedPage />} />
               <Route path="tickets/open"        element={<TechnicianOpenTicketsPage />} />
               <Route path="tickets/resolved"    element={<TechnicianResolvedPage />} />
-              <Route path="resources"           element={<TechnicianComingSoon />} />
+              <Route path="resources"           element={<UserFacilitiesPage />} />
               <Route path="notifications"       element={<TechnicianComingSoon />} />
               <Route path="account/profile"     element={<ProfilePage />} />
               <Route path="logout"              element={<TechnicianComingSoon />} />
