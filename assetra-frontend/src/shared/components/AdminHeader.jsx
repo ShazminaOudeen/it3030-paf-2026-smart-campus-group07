@@ -86,26 +86,16 @@ export default function AdminHeader() {
         {dropdownOpen && (
           <div className="absolute right-0 top-12 w-48 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-white/10 shadow-xl z-50 overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 dark:border-white/8">
-              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{displayName}</p>
-              <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{displayName}</p>
+            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
             </div>
             <div className="py-1">
-              <button onClick={() => { navigate("/admin/account/profile"); setDropdownOpen(false); }}
-                className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                My Profile
-              </button>
-              <button onClick={() => { navigate("/admin/management/notifications"); setDropdownOpen(false); }}
-                className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                Notifications
-              </button>
-              <div className="border-t border-gray-100 dark:border-white/8 mt-1 pt-1">
-                <button onClick={handleLogout}
-                  className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
-                  Sign out
-                </button>
-              </div>
-            </div>
-          </div>
+           <button onClick={handleLogout}
+              className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+               Sign out
+           </button>
+           </div>
+        </div>
         )}
       </div>
     </header>

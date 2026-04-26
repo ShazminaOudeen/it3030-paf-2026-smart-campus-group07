@@ -23,15 +23,41 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-        String email = oAuth2User.getAttribute("email");
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // GitHub hides email if set to private — fall back to login@github.com
+        String email = oAuth2User.getAttribute("email");
+        if (email == null) {
+            String login = oAuth2User.getAttribute("login");
+            email = login + "@github.com";
+        }
+
+        // GitHub sometimes returns null name — fall back to login username
+        String name = oAuth2User.getAttribute("name");
+        if (name == null) {
+            name = oAuth2User.getAttribute("login");
+        }
+
+        String pictureUrl = oAuth2User.getAttribute("avatar_url");
+
+        final String finalEmail = email;
+        final String finalName  = name;
+
+        User user = userRepository.findByEmail(finalEmail)
+                .orElseGet(() -> {
+                    User newUser = new User();
+                    newUser.setName(finalName);
+                    newUser.setEmail(finalEmail);
+                    newUser.setRole("USER");
+                    newUser.setProvider("github");
+                    newUser.setPictureUrl(pictureUrl);
+                    return userRepository.save(newUser);
+                });
 
         String token = jwtService.generateToken(
                 user.getEmail(), user.getRole(), user.getId().toString());
 
-        String redirectUrl = "http://localhost:5173/oauth2/callback?token=" + token;
-        response.sendRedirect(redirectUrl);
+        String role = user.getRole().toUpperCase();
+        String frontendUrl = "http://localhost:5173/oauth2/success?token=" + token + "&role=" + role;
+        response.sendRedirect(frontendUrl);
     }
 }
