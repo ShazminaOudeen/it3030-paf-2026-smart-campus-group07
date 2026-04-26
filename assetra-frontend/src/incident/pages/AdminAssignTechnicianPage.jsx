@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAllTickets, assignTechnician } from "../api/ticketApi";
+import { getTechnicians } from "../api/ticketApi";
 
 const PRIORITY_COLORS = {
   LOW: "text-emerald-400 bg-emerald-500/10",
@@ -8,62 +9,55 @@ const PRIORITY_COLORS = {
   CRITICAL: "text-red-400 bg-red-500/10",
 };
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 export default function AdminAssignTechnicianPage() {
   const [tickets, setTickets] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [technicianId, setTechnicianId] = useState("");
-  const [inputError, setInputError] = useState("");
+  const [selectedTechId, setSelectedTechId] = useState("");
   const [assigning, setAssigning] = useState(null);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    getAllTickets()
-      .then((res) => setTickets(res.data.filter((t) => t.status === "OPEN")))
-      .catch(() => setTickets([]))
+    Promise.all([
+      getAllTickets().then((res) =>
+        setTickets(res.data.filter((t) => t.status === "OPEN"))
+      ),
+      getTechnicians().then((data) => setTechnicians(data)),
+    ])
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  const handleIdChange = (e) => {
-    setTechnicianId(e.target.value);
-    setInputError("");
-    setError("");
-  };
-
   const handleAssign = async (ticketId) => {
-    if (!technicianId.trim()) {
-      setInputError("Please enter a technician ID");
+    if (!selectedTechId) {
+      setError("Please select a technician from the dropdown");
       return;
     }
-    if (!UUID_REGEX.test(technicianId.trim())) {
-      setInputError("Invalid UUID format — e.g. 00000000-0000-0000-0000-000000000002");
-      return;
-    }
-
     setAssigning(ticketId);
     setError("");
     try {
-      await assignTechnician(ticketId, technicianId.trim());
+      await assignTechnician(ticketId, selectedTechId);
       setTickets((prev) => prev.filter((t) => t.id !== ticketId));
       setSuccess("Technician assigned successfully!");
-      setTechnicianId("");
+      setSelectedTechId("");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(
-        err?.response?.data?.message || "Failed to assign technician. Check the ID and try again."
+        err?.response?.data?.message ||
+          "Failed to assign technician. Please try again."
       );
     } finally {
       setAssigning(null);
     }
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-10 h-10 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-10 h-10 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+      </div>
+    );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -84,7 +78,9 @@ export default function AdminAssignTechnicianPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">Assign Technician</h1>
-            <p className="text-gray-400 text-sm">{tickets.length} open tickets awaiting assignment</p>
+            <p className="text-gray-400 text-sm">
+              {tickets.length} open tickets awaiting assignment
+            </p>
           </div>
         </div>
       </div>
@@ -110,30 +106,36 @@ export default function AdminAssignTechnicianPage() {
         </div>
       )}
 
-      {/* Technician ID input */}
+      {/* Technician Dropdown */}
       <div className="fade-up p-5 rounded-2xl border border-white/8 bg-white/4 mb-6">
         <label className="block text-sm font-medium text-gray-300 mb-2">
-          Technician ID <span className="text-gray-500">(UUID)</span>
+          Select Technician
         </label>
-        <input
-          type="text"
-          value={technicianId}
-          onChange={handleIdChange}
-          placeholder="e.g. 00000000-0000-0000-0000-000000000002"
-          className={`w-full px-4 py-2.5 rounded-xl border text-white text-sm placeholder-gray-600
-                     bg-white/4 focus:outline-none transition-all
-                     ${inputError
-                       ? "border-red-500/50 focus:border-red-500"
-                       : "border-white/8 focus:border-orange-500/50 focus:bg-orange-500/5"
-                     }`}
-        />
-        {inputError ? (
-          <p className="text-xs text-red-400 mt-2">{inputError}</p>
+
+        {technicians.length === 0 ? (
+          <div className="px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm">
+            No technicians found. Ask admin to register technician accounts first.
+          </div>
         ) : (
-          <p className="text-xs text-gray-600 mt-2">
-            Enter the technician's UUID then click Assign on any ticket below
-          </p>
+          <select
+            value={selectedTechId}
+            onChange={(e) => { setSelectedTechId(e.target.value); setError(""); }}
+            className="w-full px-4 py-2.5 rounded-xl border border-white/8 bg-[#0f1117]
+                       text-white text-sm focus:outline-none focus:border-orange-500/50
+                       focus:bg-orange-500/5 transition-all cursor-pointer"
+          >
+            <option value="" disabled>— Choose a technician —</option>
+            {technicians.map((tech) => (
+              <option key={tech.id} value={tech.id}>
+                {tech.name} ({tech.email})
+              </option>
+            ))}
+          </select>
         )}
+
+        <p className="text-xs text-gray-600 mt-2">
+          Select a technician then click Assign on any ticket below
+        </p>
       </div>
 
       {/* Tickets list */}
@@ -155,7 +157,8 @@ export default function AdminAssignTechnicianPage() {
               <div
                 key={ticket.id}
                 className="ticket-row p-5 rounded-2xl border border-white/8 bg-white/4
-                           hover:border-orange-500/20 transition-all duration-200 flex items-center justify-between gap-4"
+                           hover:border-orange-500/20 transition-all duration-200
+                           flex items-center justify-between gap-4"
                 style={{ animationDelay: `${i * 0.05}s` }}
               >
                 <div className="flex-1 min-w-0">
@@ -166,19 +169,25 @@ export default function AdminAssignTechnicianPage() {
                     </span>
                   </div>
                   <p className="text-sm text-gray-400 truncate mb-1">{ticket.description}</p>
-                  <p className="text-xs text-gray-600">{new Date(ticket.createdAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-600">
+                    {new Date(ticket.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
                 <button
                   onClick={() => handleAssign(ticket.id)}
-                  disabled={assigning === ticket.id}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600
-                             text-white text-sm font-semibold transition-all hover:scale-105
-                             disabled:opacity-50 whitespace-nowrap shadow-lg shadow-orange-500/20"
+                  disabled={assigning === ticket.id || !selectedTechId}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500
+                             hover:bg-orange-600 text-white text-sm font-semibold
+                             transition-all hover:scale-105 disabled:opacity-40
+                             disabled:cursor-not-allowed whitespace-nowrap
+                             shadow-lg shadow-orange-500/20"
                 >
                   {assigning === ticket.id ? (
                     <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      <circle className="opacity-25" cx="12" cy="12" r="10"
+                        stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
                   ) : (
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

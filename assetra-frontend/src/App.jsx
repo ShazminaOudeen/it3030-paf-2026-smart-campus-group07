@@ -1,11 +1,15 @@
 // src/App.jsx
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./shared/context/ThemeContext";
 import { AuthProvider } from "./shared/context/AuthContext";
+import { useAuth } from "./shared/context/AuthContext";
+import { setAuthToken } from "./facility/api/facilitiesApi";
 
 import Navbar from "./shared/components/Navbar";
 import Footer from "./shared/components/Footer";
 import HomePage from "./pages/HomePage";
+
 
 // ── Member 4 — Auth / Notifications ──
 import RegisterPage        from "./notification/pages/RegisterPage";
@@ -29,6 +33,7 @@ import NewBookingPage    from "./booking/pages/NewBookingPage";
 import BookingsPage      from "./booking/pages/BookingsPage";
 import AdminBookingsPage from "./booking/pages/AdminBookingsPage";
 import AdminPendingPage  from "./booking/pages/AdminPendingPage";
+import QrCheckInPage     from "./booking/pages/QrCheckInPage";
 
 // ── Member 1 — Facilities ──
 import AdminFacilitiesPage from "./facility/pages/AdminFacilitiesPage";
@@ -52,13 +57,25 @@ function PublicLayout({ children }) {
   );
 }
 
+// Separate component so it can use useAuth() inside AuthProvider
 function AppContent() {
+  const { token } = useAuth();
+
+  useEffect(() => {
+    setAuthToken(token);
+  }, [token]);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    if (savedToken) setAuthToken(savedToken);
+  }, []);
   return (
     <BrowserRouter>
       <Routes>
 
         {/* ── Public ── */}
         <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
+        <Route path="/checkin/:token" element={<QrCheckInPage />} />
 
         {/* ── Auth (Member 4) ── */}
         <Route path="/register"       element={<RegisterPage />} />

@@ -21,7 +21,6 @@ export function useMyBookings() {
     setError(null);
     try {
       const { data } = await getMyBookings();
-      // Guarantee we always set an array
       setBookings(Array.isArray(data) ? data : data?.content ?? []);
     } catch (e) {
       setError(e?.response?.data?.message || "Failed to load bookings");

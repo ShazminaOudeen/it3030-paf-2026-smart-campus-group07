@@ -1,28 +1,21 @@
 import { Sun, Moon, Bell, Search, ChevronDown } from "lucide-react";
 import { useTheme } from "../../shared/context/ThemeContext";
 import { useAuth } from "../../shared/context/AuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { getUserDisplayName, getUserAvatar, getUserEmail } from "../../shared/utils/userHelpers";
 
-function usePageTitle() {
-  const { pathname } = useLocation();
-  const map = {
-    "/technician/dashboard":        "My Dashboard",
-    "/technician/tickets/assigned": "Assigned to Me",
-    "/technician/tickets/open":     "All Open Tickets",
-    "/technician/tickets/resolved": "Resolved Tickets",
-    "/technician/resources":        "View Resources",
-    "/technician/notifications":    "Notifications",
-    "/technician/account/profile":  "My Profile",
-  };
-  return map[pathname] ?? "Technician";
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 export default function TechnicianHeader() {
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const pageTitle = usePageTitle();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleLogout = () => {
@@ -30,15 +23,17 @@ export default function TechnicianHeader() {
     navigate("/");
   };
 
-  const firstLetter = user?.name?.[0]?.toUpperCase() ?? "T";
-  const displayName = user?.name ?? "Technician";
+  const displayName = getUserDisplayName(user);
+  const avatarUrl = getUserAvatar(user);
+  const userEmail = getUserEmail(user);
+  const firstLetter = displayName[0].toUpperCase();
 
   return (
     <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-surface-border dark:border-white/[0.06]">
 
       <div className="flex-1 min-w-0">
         <h1 className="text-gray-900 dark:text-white font-display font-semibold text-lg leading-none truncate">
-          {pageTitle}
+          {getGreeting()}, {displayName} 👋
         </h1>
         <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5 font-mono">
           Smart Campus Operations Hub
@@ -61,12 +56,11 @@ export default function TechnicianHeader() {
         {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
       </button>
 
-      {/* User dropdown */}
       <div className="relative">
         <div onClick={() => setDropdownOpen(!dropdownOpen)}
           className="flex items-center gap-2.5 pl-3 border-l border-surface-border dark:border-white/[0.08] cursor-pointer group">
-          {user?.picture ? (
-            <img src={user.picture} alt={displayName} className="w-8 h-8 rounded-full object-cover"/>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={displayName} className="w-8 h-8 rounded-full object-cover"/>
           ) : (
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-blue-500/30">
               {firstLetter}
@@ -79,21 +73,20 @@ export default function TechnicianHeader() {
           <ChevronDown size={13} className={`text-gray-400 group-hover:text-blue-400 transition-all duration-200 ${dropdownOpen ? "rotate-180" : ""}`}/>
         </div>
 
-        {/* Dropdown menu */}
         {dropdownOpen && (
           <div className="absolute right-0 top-12 w-48 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-white/10 shadow-xl z-50 overflow-hidden">
-         <div className="px-4 py-3 border-b border-gray-100 dark:border-white/8">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{displayName}</p>
-          <p className="text-xs text-gray-400 truncate">{user?.email}</p>
-        </div>
-        <div className="py-1">
-        <button onClick={handleLogout}
-            className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
-             Sign out
-       </button>
-       </div>
-      </div>
-    )}
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-white/8">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{displayName}</p>
+              <p className="text-xs text-gray-400 truncate">{userEmail}</p>
+            </div>
+            <div className="py-1">
+              <button onClick={handleLogout}
+                className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                Sign out
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

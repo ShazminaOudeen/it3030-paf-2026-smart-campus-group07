@@ -39,3 +39,9 @@ export const deleteComment = (commentId, userId) =>
   api.delete(`/tickets/comments/${commentId}`, {
     headers: { "X-User-Id": userId },
   });
+
+// GET all technicians from user service
+export const getTechnicians = () =>
+  axios.get(`${API_BASE}/users`).then((res) =>
+    res.data.filter((u) => u.role === "TECHNICIAN")
+  );
