@@ -50,7 +50,8 @@ export default function TechnicianAssignedPage() {
       <div className="flex items-center gap-3 mb-8">
         <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
           <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
         </div>
         <div>
@@ -92,13 +93,13 @@ export default function TechnicianAssignedPage() {
                   </span>
                 </div>
 
-                {/* Notes */}
+                {/* Notes — FIXED dark background */}
                 <textarea
                   placeholder="Add resolution notes here..."
                   value={notes[ticket.id] || ""}
                   onChange={(e) => setNotes({ ...notes, [ticket.id]: e.target.value })}
                   rows={2}
-                  className="w-full px-4 py-3 rounded-xl border border-white/8 bg-white/4
+                  className="w-full px-4 py-3 rounded-xl border border-white/8 bg-[#0f0f1a]
                              text-sm text-gray-300 placeholder-gray-600 resize-none mb-3
                              focus:outline-none focus:border-orange-500/40 focus:bg-orange-500/5 transition-all"
                 />
@@ -106,9 +107,9 @@ export default function TechnicianAssignedPage() {
                 {/* Action buttons */}
                 <div className="flex gap-2 flex-wrap">
                   {[
-                    { status: "IN_PROGRESS", label: "In Progress", color: "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20" },
-                    { status: "RESOLVED", label: "Mark Resolved", color: "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20" },
-                    { status: "CLOSED", label: "Close Ticket", color: "bg-gray-600 hover:bg-gray-700 shadow-gray-500/20" },
+                    { status: "IN_PROGRESS", label: "In Progress",  color: "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20" },
+                    { status: "RESOLVED",    label: "Mark Resolved", color: "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20" },
+                    { status: "CLOSED",      label: "Close Ticket",  color: "bg-gray-600 hover:bg-gray-700 shadow-gray-500/20" },
                   ].map((btn) => (
                     <button key={btn.status}
                       onClick={() => handleStatusUpdate(ticket.id, btn.status)}

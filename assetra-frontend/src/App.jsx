@@ -22,6 +22,7 @@ import NotificationsPage   from "./notification/pages/NotificationsPage";
 // ── Member 3 — Incidents ──
 import ReportIssuePage           from "./incident/pages/ReportIssuePage";
 import MyTicketsPage             from "./incident/pages/MyTicketsPage";
+import TicketDetailPage          from "./incident/pages/TicketDetailPage";   // ← NEW
 import AdminAllTicketsPage       from "./incident/pages/AdminAllTicketsPage";
 import AdminAssignTechnicianPage from "./incident/pages/AdminAssignTechnicianPage";
 import TechnicianAssignedPage    from "./incident/pages/TechnicianAssignedPage";
@@ -108,7 +109,7 @@ function AppContent() {
           <Route path="bookings"            element={<BookingsPage />} />
           <Route path="maintenance/report"  element={<ReportIssuePage />} />
           <Route path="maintenance"         element={<MyTicketsPage />} />
-          <Route path="notifications"       element={<NotificationsPage />} />
+          <Route path="notifications"       element={<UserComingSoon />} />
           <Route path="account/profile"     element={<ProfilePage />} />
           <Route path="logout"              element={<UserComingSoon />} />
         </Route>

@@ -65,6 +65,7 @@ export default function AdminAssignTechnicianPage() {
         @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
         .fade-up { animation: fadeUp 0.4s ease both; }
         .ticket-row { animation: fadeUp 0.3s ease both; }
+        select option { background-color: #0f0f1a; color: #d1d5db; }
       `}</style>
 
       {/* Header */}
@@ -120,7 +121,7 @@ export default function AdminAssignTechnicianPage() {
           <select
             value={selectedTechId}
             onChange={(e) => { setSelectedTechId(e.target.value); setError(""); }}
-            className="w-full px-4 py-2.5 rounded-xl border border-white/8 bg-[#0f1117]
+            className="w-full px-4 py-2.5 rounded-xl border border-white/8 bg-[#0f0f1a]
                        text-white text-sm focus:outline-none focus:border-orange-500/50
                        focus:bg-orange-500/5 transition-all cursor-pointer"
           >

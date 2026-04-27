@@ -46,4 +46,11 @@ public class Ticket {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    // ← NEW: for service-level timer
+    @Column(name = "assigned_at")
+    private LocalDateTime assignedAt;
+
+    @Column(name = "resolved_at")
+    private LocalDateTime resolvedAt;
 }
