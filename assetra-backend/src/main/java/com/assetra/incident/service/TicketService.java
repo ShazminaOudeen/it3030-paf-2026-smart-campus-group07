@@ -83,6 +83,7 @@ public class TicketService {
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
         ticket.setAssignedTo(technicianId);
         ticket.setStatus("IN_PROGRESS");
+        ticket.setAssignedAt(LocalDateTime.now()); // ← NEW
         return mapToDTO(ticketRepository.save(ticket));
     }
 
@@ -93,6 +94,10 @@ public class TicketService {
         ticket.setStatus(status);
         if (notes != null) ticket.setResolutionNotes(notes);
         if (reason != null) ticket.setRejectionReason(reason);
+        // ← NEW: set resolvedAt when status changes to RESOLVED
+        if ("RESOLVED".equals(status) && ticket.getResolvedAt() == null) {
+            ticket.setResolvedAt(LocalDateTime.now());
+        }
         return mapToDTO(ticketRepository.save(ticket));
     }
 
@@ -147,6 +152,8 @@ public class TicketService {
         dto.setAssignedTo(t.getAssignedTo());
         dto.setResolutionNotes(t.getResolutionNotes());
         dto.setCreatedAt(t.getCreatedAt());
+        dto.setAssignedAt(t.getAssignedAt()); // ← NEW
+        dto.setResolvedAt(t.getResolvedAt()); // ← NEW
         return dto;
     }
 

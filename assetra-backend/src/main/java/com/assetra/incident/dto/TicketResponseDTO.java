@@ -18,4 +18,6 @@ public class TicketResponseDTO {
     private UUID assignedTo;
     private String resolutionNotes;
     private LocalDateTime createdAt;
+    private LocalDateTime assignedAt; // ← NEW
+    private LocalDateTime resolvedAt; // ← NEW
 }

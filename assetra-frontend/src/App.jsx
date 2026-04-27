@@ -10,7 +10,6 @@ import Navbar from "./shared/components/Navbar";
 import Footer from "./shared/components/Footer";
 import HomePage from "./pages/HomePage";
 
-
 // ── Member 4 — Auth / Notifications ──
 import RegisterPage        from "./notification/pages/RegisterPage";
 import LoginPortalPage     from "./notification/pages/LoginPortalPage";
@@ -22,6 +21,7 @@ import ProfilePage         from "./shared/components/ProfilePage";
 // ── Member 3 — Incidents ──
 import ReportIssuePage           from "./incident/pages/ReportIssuePage";
 import MyTicketsPage             from "./incident/pages/MyTicketsPage";
+import TicketDetailPage          from "./incident/pages/TicketDetailPage";   // ← NEW
 import AdminAllTicketsPage       from "./incident/pages/AdminAllTicketsPage";
 import AdminAssignTechnicianPage from "./incident/pages/AdminAssignTechnicianPage";
 import TechnicianAssignedPage    from "./incident/pages/TechnicianAssignedPage";
@@ -57,7 +57,6 @@ function PublicLayout({ children }) {
   );
 }
 
-// Separate component so it can use useAuth() inside AuthProvider
 function AppContent() {
   const { token } = useAuth();
 
@@ -69,6 +68,7 @@ function AppContent() {
     const savedToken = localStorage.getItem("token");
     if (savedToken) setAuthToken(savedToken);
   }, []);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -101,16 +101,17 @@ function AppContent() {
 
         {/* ── User routes ── */}
         <Route path="/user" element={<UserLayout />}>
-          <Route index                      element={<UserComingSoon />} />
-          <Route path="dashboard"           element={<UserComingSoon />} />
-          <Route path="resources"           element={<UserFacilitiesPage />} />
-          <Route path="bookings/new"        element={<NewBookingPage />} />
-          <Route path="bookings"            element={<BookingsPage />} />
-          <Route path="maintenance/report"  element={<ReportIssuePage />} />
-          <Route path="maintenance"         element={<MyTicketsPage />} />
-          <Route path="notifications"       element={<UserComingSoon />} />
-          <Route path="account/profile"     element={<ProfilePage />} />
-          <Route path="logout"              element={<UserComingSoon />} />
+          <Route index                        element={<UserComingSoon />} />
+          <Route path="dashboard"             element={<UserComingSoon />} />
+          <Route path="resources"             element={<UserFacilitiesPage />} />
+          <Route path="bookings/new"          element={<NewBookingPage />} />
+          <Route path="bookings"              element={<BookingsPage />} />
+          <Route path="maintenance/report"    element={<ReportIssuePage />} />
+          <Route path="maintenance"           element={<MyTicketsPage />} />
+          <Route path="maintenance/:id"       element={<TicketDetailPage />} />  {/* ← NEW */}
+          <Route path="notifications"         element={<UserComingSoon />} />
+          <Route path="account/profile"       element={<ProfilePage />} />
+          <Route path="logout"               element={<UserComingSoon />} />
         </Route>
 
         {/* ── Technician routes ── */}
