@@ -1,4 +1,4 @@
-// facility/components/ResourceFilters.jsx
+// facility/components/ResourceFilters.jsx.
 import { useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 

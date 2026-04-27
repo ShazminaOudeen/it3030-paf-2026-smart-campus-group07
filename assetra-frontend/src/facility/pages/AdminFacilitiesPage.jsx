@@ -1,4 +1,4 @@
-// facility/pages/admin/AdminFacilitiesPage.jsx
+// facility/pages/admin/AdminFacilitiesPage.jsx.
 import { useState } from "react";
 import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, BarChart3, Loader2, AlertCircle } from "lucide-react";
 import { useResources, useResourceStats } from "../hooks/useResources";

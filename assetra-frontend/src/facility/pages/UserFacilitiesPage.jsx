@@ -1,4 +1,4 @@
-// facility/pages/user/UserFacilitiesPage.jsx
+// facility/pages/user/UserFacilitiesPage.jsx.
 import { useState } from "react";
 import { Layers, Loader2, AlertCircle } from "lucide-react";
 import { useResources } from "../hooks/useResources";
