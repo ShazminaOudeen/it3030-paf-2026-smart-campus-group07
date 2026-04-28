@@ -9,6 +9,7 @@ import { setAuthToken } from "./facility/api/facilitiesApi";
 import Navbar from "./shared/components/Navbar";
 import Footer from "./shared/components/Footer";
 import HomePage from "./pages/HomePage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 // ── Member 4 — Auth / Notifications ──
 import RegisterPage        from "./notification/pages/RegisterPage";
@@ -87,7 +88,7 @@ function AppContent() {
         {/* ── Admin ── */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index                           element={<AdminComingSoon />} />
-          <Route path="dashboard"                element={<AdminComingSoon />} />
+          <Route path="dashboard"                 element={<AdminDashboardPage />} />
           <Route path="resources"                element={<AdminFacilitiesPage />} />
           <Route path="resources/add"            element={<AdminFacilitiesPage />} />
           <Route path="bookings"                 element={<AdminBookingsPage />} />
