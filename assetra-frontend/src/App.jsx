@@ -10,6 +10,8 @@ import Navbar from "./shared/components/Navbar";
 import Footer from "./shared/components/Footer";
 import HomePage from "./pages/HomePage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import UserDashboardPage from "./pages/UserDashboardPage";
+
 
 // ── Member 4 — Auth / Notifications ──
 import RegisterPage        from "./notification/pages/RegisterPage";
@@ -104,7 +106,7 @@ function AppContent() {
         {/* ── User ── */}
         <Route path="/user" element={<UserLayout />}>
           <Route index                      element={<UserComingSoon />} />
-          <Route path="dashboard"           element={<UserComingSoon />} />
+          <Route path="dashboard"           element={<UserDashboardPage />} />
           <Route path="resources"           element={<UserFacilitiesPage />} />
           <Route path="bookings/new"        element={<NewBookingPage />} />
           <Route path="bookings"            element={<BookingsPage />} />
