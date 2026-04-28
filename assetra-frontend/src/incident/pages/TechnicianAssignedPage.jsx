@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAllTickets, updateTicketStatus } from "../api/ticketApi";
+import { useAuth } from "../../shared/context/AuthContext"; // ✅ import auth
 
 const STATUS_CONFIG = {
   IN_PROGRESS: { color: "bg-amber-500/15 text-amber-400 border-amber-500/25", dot: "bg-amber-400" },
@@ -9,18 +10,23 @@ const STATUS_CONFIG = {
 };
 
 export default function TechnicianAssignedPage() {
+  const { user } = useAuth(); // ✅ get logged-in user
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState({});
   const [updating, setUpdating] = useState(null);
-  const technicianId = "00000000-0000-0000-0000-000000000002";
 
   useEffect(() => {
+    if (!user?.id) return; // wait until user is loaded
+
     getAllTickets()
-      .then((res) => setTickets(res.data.filter((t) => t.assignedTo === technicianId)))
+      .then((res) =>
+        // ✅ compare against real logged-in technician's ID
+        setTickets(res.data.filter((t) => t.assignedTo === user.id))
+      )
       .catch(() => setTickets([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [user?.id]); // ✅ re-run if user changes
 
   const handleStatusUpdate = async (ticketId, status) => {
     setUpdating(ticketId + status);
@@ -31,7 +37,7 @@ export default function TechnicianAssignedPage() {
     finally { setUpdating(null); }
   };
 
-  if (loading) return (
+  if (loading || !user) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="w-10 h-10 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
     </div>
@@ -93,7 +99,7 @@ export default function TechnicianAssignedPage() {
                   </span>
                 </div>
 
-                {/* Notes — FIXED dark background */}
+                {/* Notes */}
                 <textarea
                   placeholder="Add resolution notes here..."
                   value={notes[ticket.id] || ""}
