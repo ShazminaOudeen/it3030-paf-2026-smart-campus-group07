@@ -8,28 +8,6 @@ export function AuthProvider({ children }) {
   const [token,   setToken]   = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUser  = localStorage.getItem("user");
-
-    if (savedToken && savedUser) {
-      try {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
-        setLoading(false);
-      } catch {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setLoading(false);
-      }
-    } else if (savedToken && !savedUser) {
-      // token exists but user was never saved — fetch it now
-      loginWithToken(savedToken).finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
   const login = (newToken, userData) => {
     localStorage.setItem("token", newToken);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -69,8 +47,29 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    const savedUser  = localStorage.getItem("user");
+
+    if (savedToken && savedUser) {
+      try {
+        setToken(savedToken);
+        setUser(JSON.parse(savedUser));
+        setLoading(false);
+      } catch {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setLoading(false);
+      }
+    } else if (savedToken && !savedUser) {
+      loginWithToken(savedToken).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, loginWithToken, logout }}>
       {children}
     </AuthContext.Provider>
   );
