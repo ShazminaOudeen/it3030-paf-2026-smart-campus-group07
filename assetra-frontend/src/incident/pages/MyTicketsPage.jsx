@@ -62,8 +62,8 @@ export default function MyTicketsPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">My Tickets</h1>
-          <p className="text-gray-400 text-sm">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">My Tickets</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             {tickets.length} total • {tickets.filter(t => t.status === "OPEN").length} open
           </p>
         </div>
@@ -84,7 +84,9 @@ export default function MyTicketsPage() {
         {["ALL", "OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED", "REJECTED"].map((s) => (
           <button key={s} onClick={() => setFilter(s)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200
-              ${filter === s ? "bg-orange-500 text-white shadow-md" : "text-gray-400 hover:text-white"}`}>
+              ${filter === s
+                ? "bg-orange-500 text-white shadow-md"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"}`}>
             {s.replace("_", " ")}
           </button>
         ))}
@@ -112,20 +114,21 @@ export default function MyTicketsPage() {
             return (
               <div key={ticket.id}
                 onClick={() => navigate(`/user/maintenance/${ticket.id}`)}
-                className="ticket-card group p-5 rounded-2xl border border-white/8 bg-white/4
-                           cursor-pointer hover:border-orange-500/30 hover:bg-orange-500/5
+                className="ticket-card group p-5 rounded-2xl border border-white/8 dark:border-white/8
+                           bg-white/4 dark:bg-white/4 cursor-pointer
+                           hover:border-orange-500/30 hover:bg-orange-500/5
                            hover:-translate-y-0.5 transition-all duration-200"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="font-semibold text-white">{ticket.category}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{ticket.category}</span>
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
                         {ticket.priority}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-400 truncate mb-3">{ticket.description}</p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate mb-3">{ticket.description}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-600">
                       {new Date(ticket.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </p>
                   </div>
@@ -134,7 +137,8 @@ export default function MyTicketsPage() {
                       <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                       {status.label}
                     </span>
-                    <svg className="w-4 h-4 text-gray-600 group-hover:text-orange-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-600 group-hover:text-orange-400 transition-colors"
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
