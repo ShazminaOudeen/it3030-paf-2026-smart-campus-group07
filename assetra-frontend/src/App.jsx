@@ -29,6 +29,7 @@ import AdminAssignTechnicianPage from "./incident/pages/AdminAssignTechnicianPag
 import TechnicianAssignedPage    from "./incident/pages/TechnicianAssignedPage";
 import TechnicianOpenTicketsPage from "./incident/pages/TechnicianOpenTicketsPage";
 import TechnicianResolvedPage    from "./incident/pages/TechnicianResolvedPage";
+import TechnicianDashboardPage from "./incident/pages/TechnicianDashboardPage";
 
 // ── Member 2 — Bookings ──
 import NewBookingPage    from "./booking/pages/NewBookingPage";
@@ -118,7 +119,7 @@ function AppContent() {
         {/* ── Technician ── */}
         <Route path="/technician" element={<TechnicianLayout />}>
           <Route index                      element={<TechnicianComingSoon />} />
-          <Route path="dashboard"           element={<TechnicianComingSoon />} />
+          <Route path="dashboard" element={<TechnicianDashboardPage />} />
           <Route path="tickets/assigned"    element={<TechnicianAssignedPage />} />
           <Route path="tickets/open"        element={<TechnicianOpenTicketsPage />} />
           <Route path="tickets/resolved"    element={<TechnicianResolvedPage />} />
