@@ -1,11 +1,9 @@
 
-
-//assetra-frontend/src/incident/pages/ReportIssuePage.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createTicket } from "../api/ticketApi";
+import { useAuth } from "../../shared/context/AuthContext";
 
-const CATEGORIES = ["Electrical", "Plumbing", "Equipment", "Network", "Furniture", "Other"];
 const PRIORITIES = [
   { value: "LOW", color: "from-emerald-500 to-teal-500", bg: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" },
   { value: "MEDIUM", color: "from-amber-500 to-yellow-500", bg: "bg-amber-500/10 border-amber-500/30 text-amber-400" },
@@ -13,8 +11,11 @@ const PRIORITIES = [
   { value: "CRITICAL", color: "from-red-500 to-rose-600", bg: "bg-red-500/10 border-red-500/30 text-red-400" },
 ];
 
+const FALLBACK_CATEGORIES = ["Electrical", "Plumbing", "Equipment", "Network", "Furniture", "Other"];
+
 export default function ReportIssuePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [form, setForm] = useState({
     category: "",
     description: "",
@@ -23,18 +24,33 @@ export default function ReportIssuePage() {
     resourceId: "",
   });
   const [resources, setResources] = useState([]);
+  const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState(1);
-  const userId = "00000000-0000-0000-0000-000000000001";
 
   useEffect(() => {
-    fetch("http://localhost:8082/api/resources")
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:8082/api/resources?size=100&status=ACTIVE", {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    })
       .then((res) => res.json())
-      .then((data) => setResources(Array.isArray(data) ? data : []))
-      .catch(() => setResources([]));
+      .then((data) => {
+        const items = data?.content ?? (Array.isArray(data) ? data : []);
+        setResources(items);
+        const types = [...new Set(items.map((r) => r.type).filter(Boolean))];
+        if (types.length > 0) {
+          setCategories([...types, "Other"]);
+        }
+      })
+      .catch(() => {
+        setResources([]);
+        setCategories(FALLBACK_CATEGORIES);
+      });
   }, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -48,6 +64,8 @@ export default function ReportIssuePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user?.id) { setError("You must be logged in to submit a ticket."); return; }
+    if (!form.category) { setError("Please select a category."); return; }
     setLoading(true);
     setError("");
     try {
@@ -55,7 +73,7 @@ export default function ReportIssuePage() {
       const ticketBlob = new Blob([JSON.stringify(form)], { type: "application/json" });
       formData.append("ticket", ticketBlob);
       files.forEach((f) => formData.append("files", f));
-      await createTicket(formData, userId);
+      await createTicket(formData, user.id);
       setSuccess(true);
       setTimeout(() => navigate("/user/maintenance"), 2500);
     } catch {
@@ -78,7 +96,8 @@ export default function ReportIssuePage() {
         <div className="relative flex items-center justify-center mb-8">
           <div className="absolute w-24 h-24 rounded-full bg-emerald-500/20 ripple" />
           <div className="absolute w-24 h-24 rounded-full bg-emerald-500/10 ripple2" />
-          <div className="success-icon w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-2xl shadow-emerald-500/40">
+          <div className="success-icon w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500
+                          flex items-center justify-center shadow-2xl shadow-emerald-500/40">
             <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
@@ -113,7 +132,7 @@ export default function ReportIssuePage() {
           padding: 12px 16px;
           border-radius: 12px;
           border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(255,255,255,0.04);
+          background: #0f0f1a;
           color: white;
           font-size: 14px;
           outline: none;
@@ -125,14 +144,15 @@ export default function ReportIssuePage() {
           box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
         }
         .input-field::placeholder { color: rgba(255,255,255,0.25); }
-        .input-field option { background: #1a1a2e; color: white; }
+        .input-field option { background: #0f0f1a; color: white; }
       `}</style>
 
       <div className="fade-up mb-8">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
             <svg className="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
           </div>
           <div>
@@ -142,7 +162,8 @@ export default function ReportIssuePage() {
         </div>
         <div className="flex gap-2 mt-4">
           {[1, 2, 3].map((s) => (
-            <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-500 ${step >= s ? "bg-orange-500" : "bg-white/10"}`} />
+            <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-500
+              ${step >= s ? "bg-orange-500" : "bg-white/10"}`} />
           ))}
         </div>
       </div>
@@ -157,35 +178,43 @@ export default function ReportIssuePage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
+
+        {/* Affected Resource */}
         <div className="fade-up-1">
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Affected Resource
-            <span className="text-gray-500 ml-1">(optional)</span>
+            Affected Resource <span className="text-gray-500 ml-1">(optional)</span>
           </label>
-          <select
-            name="resourceId"
-            value={form.resourceId}
-            onChange={(e) => { handleChange(e); setStep(Math.max(step, 2)); }}
+          <select name="resourceId" value={form.resourceId}
+            onChange={(e) => {
+              const selected = resources.find(r => r.id === e.target.value);
+              setForm(f => ({
+                ...f,
+                resourceId: e.target.value,
+                category: selected?.type || f.category
+              }));
+              setStep(Math.max(step, 2));
+            }}
             className="input-field"
           >
             <option value="">Select a resource (lab, room, equipment...)</option>
-            {resources.length > 0 ? (
-              resources.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name} — {r.type} {r.location ? `(${r.location})` : ""}
-                </option>
-              ))
-            ) : (
-              <option disabled value="">No resources available yet</option>
-            )}
+            {resources.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name} — {r.type}{r.location ? ` (${r.location})` : ""}
+              </option>
+            ))}
           </select>
-          <p className="text-xs text-gray-600 mt-1">Select the lab, room, or equipment that has the issue</p>
+          <p className="text-xs text-gray-600 mt-1">
+            {resources.length > 0
+              ? `${resources.length} resources available`
+              : "Loading resources..."}
+          </p>
         </div>
 
+        {/* Category */}
         <div className="fade-up-2">
           <label className="block text-sm font-medium text-gray-300 mb-2">Category *</label>
           <div className="grid grid-cols-3 gap-2">
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <button key={c} type="button"
                 onClick={() => { setForm({ ...form, category: c }); setStep(Math.max(step, 2)); }}
                 className={`py-2.5 px-3 rounded-xl text-sm font-medium border transition-all duration-200
@@ -193,16 +222,16 @@ export default function ReportIssuePage() {
                     ? "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/25"
                     : "bg-white/4 border-white/8 text-gray-400 hover:border-orange-500/40 hover:text-orange-400 hover:bg-orange-500/5"
                   }`}>
-                {c}
+                {c.replace(/_/g, " ")}
               </button>
             ))}
           </div>
         </div>
 
+        {/* Description */}
         <div className="fade-up-3">
           <label className="block text-sm font-medium text-gray-300 mb-2">Description *</label>
-          <textarea
-            name="description" value={form.description}
+          <textarea name="description" value={form.description}
             onChange={(e) => { handleChange(e); setStep(Math.max(step, 2)); }}
             required rows={4}
             placeholder="Describe the issue in detail — what happened, when it started..."
@@ -211,6 +240,7 @@ export default function ReportIssuePage() {
           <p className="text-xs text-gray-500 mt-1">{form.description.length} characters</p>
         </div>
 
+        {/* Priority */}
         <div className="fade-up-4">
           <label className="block text-sm font-medium text-gray-300 mb-2">Priority *</label>
           <div className="grid grid-cols-4 gap-2">
@@ -228,16 +258,17 @@ export default function ReportIssuePage() {
           </div>
         </div>
 
+        {/* Contact Details */}
         <div className="fade-up-5">
           <label className="block text-sm font-medium text-gray-300 mb-2">Contact Details *</label>
-          <input
-            type="text" name="contactDetails" value={form.contactDetails}
+          <input type="text" name="contactDetails" value={form.contactDetails}
             onChange={(e) => { handleChange(e); setStep(Math.max(step, 3)); }}
             required placeholder="Your phone number or email address"
             className="input-field"
           />
         </div>
 
+        {/* File Upload */}
         <div className="fade-up-6">
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Attach Evidence <span className="text-gray-500">(max 3 images)</span>
