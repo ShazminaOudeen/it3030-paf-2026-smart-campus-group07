@@ -1,21 +1,22 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Ticket, ClipboardList, CheckCircle,
-  Layers, Bell, LogOut, ChevronDown, ChevronRight, Home,
+  Layers, LogOut, ChevronDown, ChevronRight, Home,
   BookOpen, Inbox, User,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import logo from "../../assets/assetra_logo.png";
 
+// Notifications removed — technician does not receive notifications
 const MENU = [
   { label: "My Dashboard", icon: LayoutDashboard, href: "/technician/dashboard" },
   {
     label: "Tickets", icon: Ticket,
     children: [
-      { label: "Assigned to Me", icon: Inbox, href: "/technician/tickets/assigned" },
+      { label: "Assigned to Me",   icon: Inbox,         href: "/technician/tickets/assigned" },
       { label: "All Open Tickets", icon: ClipboardList, href: "/technician/tickets/open" },
-      { label: "Resolved Tickets", icon: CheckCircle, href: "/technician/tickets/resolved" },
+      { label: "Resolved Tickets", icon: CheckCircle,   href: "/technician/tickets/resolved" },
     ],
   },
   {
@@ -24,7 +25,6 @@ const MENU = [
       { label: "View Resources", icon: BookOpen, href: "/technician/resources" },
     ],
   },
-  { label: "Notifications", icon: Bell, href: "/technician/notifications" },
   { label: "My Profile", icon: User, href: "/technician/account/profile" },
 ];
 
@@ -54,13 +54,19 @@ function NavGroup({ group, collapsed }) {
       <button onClick={() => !collapsed && setOpen((p) => !p)}
         title={collapsed ? group.label : undefined}
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150
-          ${isGroupActive ? "text-blue-500 dark:text-blue-400" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06]"}`}>
+          ${isGroupActive
+            ? "text-blue-500 dark:text-blue-400"
+            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06]"
+          }`}>
         <group.icon size={17}
           className={`shrink-0 ${isGroupActive ? "text-blue-500 dark:text-blue-400" : "text-gray-400 dark:text-gray-500"}`}/>
         {!collapsed && (
           <>
             <span className="flex-1 text-left">{group.label}</span>
-            {open ? <ChevronDown size={13} className="text-gray-400"/> : <ChevronRight size={13} className="text-gray-400"/>}
+            {open
+              ? <ChevronDown  size={13} className="text-gray-400"/>
+              : <ChevronRight size={13} className="text-gray-400"/>
+            }
           </>
         )}
       </button>
@@ -75,12 +81,9 @@ function NavGroup({ group, collapsed }) {
 
 export default function TechnicianSidebar({ open, collapsed, onCollapsedChange }) {
   const { logout } = useAuth();
-  const navigate = useNavigate();
+  const navigate   = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
+  const handleLogout = () => { logout(); navigate("/"); };
 
   return (
     <aside className={`fixed top-0 left-0 z-30 h-screen bg-white dark:bg-gray-900
@@ -100,7 +103,10 @@ export default function TechnicianSidebar({ open, collapsed, onCollapsedChange }
         )}
         <button onClick={() => onCollapsedChange((p) => !p)}
           className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors shrink-0">
-          {collapsed ? <ChevronRight size={16} className="text-gray-400"/> : <ChevronDown size={16} className="text-gray-400 rotate-90"/>}
+          {collapsed
+            ? <ChevronRight size={16} className="text-gray-400"/>
+            : <ChevronDown  size={16} className="text-gray-400 rotate-90"/>
+          }
         </button>
       </div>
 
@@ -109,18 +115,21 @@ export default function TechnicianSidebar({ open, collapsed, onCollapsedChange }
         {MENU.map((item) =>
           item.children
             ? <NavGroup key={item.label} group={item} collapsed={collapsed}/>
-            : <NavItem key={item.href} item={item} collapsed={collapsed}/>
+            : <NavItem  key={item.href}  item={item}  collapsed={collapsed}/>
         )}
       </nav>
 
       <div className="px-2 py-3 border-t border-gray-200 dark:border-white/[0.06] space-y-0.5">
         <NavLink to="/" end
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-150">
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+                     text-gray-500 dark:text-gray-400
+                     hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-150">
           <Home size={15} className="shrink-0"/>
           {!collapsed && <span className="truncate flex-1">Go to Home</span>}
         </NavLink>
         <button onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all duration-150">
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+                     text-red-400 hover:bg-red-500/10 transition-all duration-150">
           <LogOut size={15} className="shrink-0"/>
           {!collapsed && <span className="truncate flex-1">Logout</span>}
         </button>
