@@ -126,6 +126,7 @@ function AppContent() {
           <Route path="resources"           element={<UserFacilitiesPage />} />
           <Route path="account/profile"     element={<ProfilePage />} />
           <Route path="logout"              element={<TechnicianComingSoon />} />
+          <Route path="tickets/:id" element={<TicketDetailPage />} />
         </Route>
 
       </Routes>
