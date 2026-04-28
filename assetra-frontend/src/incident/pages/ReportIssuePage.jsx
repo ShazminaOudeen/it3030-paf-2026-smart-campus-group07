@@ -1,9 +1,9 @@
 
-
 //assetra-frontend/src/incident/pages/ReportIssuePage.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createTicket } from "../api/ticketApi";
+import { useAuth } from "../../shared/context/AuthContext";
 
 const CATEGORIES = ["Electrical", "Plumbing", "Equipment", "Network", "Furniture", "Other"];
 const PRIORITIES = [
@@ -15,6 +15,7 @@ const PRIORITIES = [
 
 export default function ReportIssuePage() {
   const navigate = useNavigate();
+  const { user } = useAuth(); // ← FIXED
   const [form, setForm] = useState({
     category: "",
     description: "",
@@ -28,7 +29,6 @@ export default function ReportIssuePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState(1);
-  const userId = "00000000-0000-0000-0000-000000000001";
 
   useEffect(() => {
     fetch("http://localhost:8082/api/resources")
@@ -48,6 +48,7 @@ export default function ReportIssuePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user?.id) { setError("You must be logged in to submit a ticket."); return; }
     setLoading(true);
     setError("");
     try {
@@ -55,7 +56,7 @@ export default function ReportIssuePage() {
       const ticketBlob = new Blob([JSON.stringify(form)], { type: "application/json" });
       formData.append("ticket", ticketBlob);
       files.forEach((f) => formData.append("files", f));
-      await createTicket(formData, userId);
+      await createTicket(formData, user.id); // ← FIXED
       setSuccess(true);
       setTimeout(() => navigate("/user/maintenance"), 2500);
     } catch {
@@ -132,7 +133,8 @@ export default function ReportIssuePage() {
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
             <svg className="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
           </div>
           <div>
@@ -142,7 +144,8 @@ export default function ReportIssuePage() {
         </div>
         <div className="flex gap-2 mt-4">
           {[1, 2, 3].map((s) => (
-            <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-500 ${step >= s ? "bg-orange-500" : "bg-white/10"}`} />
+            <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-500
+              ${step >= s ? "bg-orange-500" : "bg-white/10"}`} />
           ))}
         </div>
       </div>
@@ -159,12 +162,9 @@ export default function ReportIssuePage() {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="fade-up-1">
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Affected Resource
-            <span className="text-gray-500 ml-1">(optional)</span>
+            Affected Resource <span className="text-gray-500 ml-1">(optional)</span>
           </label>
-          <select
-            name="resourceId"
-            value={form.resourceId}
+          <select name="resourceId" value={form.resourceId}
             onChange={(e) => { handleChange(e); setStep(Math.max(step, 2)); }}
             className="input-field"
           >
@@ -201,8 +201,7 @@ export default function ReportIssuePage() {
 
         <div className="fade-up-3">
           <label className="block text-sm font-medium text-gray-300 mb-2">Description *</label>
-          <textarea
-            name="description" value={form.description}
+          <textarea name="description" value={form.description}
             onChange={(e) => { handleChange(e); setStep(Math.max(step, 2)); }}
             required rows={4}
             placeholder="Describe the issue in detail — what happened, when it started..."
@@ -230,8 +229,7 @@ export default function ReportIssuePage() {
 
         <div className="fade-up-5">
           <label className="block text-sm font-medium text-gray-300 mb-2">Contact Details *</label>
-          <input
-            type="text" name="contactDetails" value={form.contactDetails}
+          <input type="text" name="contactDetails" value={form.contactDetails}
             onChange={(e) => { handleChange(e); setStep(Math.max(step, 3)); }}
             required placeholder="Your phone number or email address"
             className="input-field"

@@ -40,33 +40,27 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(s -> 
+            .sessionManagement(s ->
                 s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             )
             .authorizeHttpRequests(auth -> auth
-
-                // ✅ Public routes
                 .requestMatchers(
                     "/auth/**",
                     "/actuator/**",
                     "/login/**",
                     "/oauth2/**",
+                    "/tickets/**",       // ← ADDED BACK
+                    "/resources/**",     // ← ADDED BACK
+                    "/bookings/**",      // ← ADDED BACK
                     "/error"
                 ).permitAll()
-
-                // ✅ Role-based access
                 .requestMatchers("/users/**")
                     .hasAnyAuthority("ROLE_ADMIN", "ROLE_USER", "ROLE_TECHNICIAN")
-
-                // ✅ Notifications (authenticated users only)
                 .requestMatchers("/notifications/**")
                     .authenticated()
-
-                // ✅ ALWAYS KEEP THIS LAST
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth -> oauth
-                // ← REMOVED .loginPage("/login") — this was causing the redirect on preflight
                 .userInfoEndpoint(u -> u.userService(customOAuth2UserService))
                 .successHandler(oAuth2SuccessHandler)
                 .failureUrl("http://localhost:5173/login?error=true")
@@ -80,15 +74,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // ← FIXED: split comma-separated string into a proper list
         config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
         return source;
     }
 }
