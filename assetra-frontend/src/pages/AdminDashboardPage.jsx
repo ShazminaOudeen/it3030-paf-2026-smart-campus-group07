@@ -103,142 +103,332 @@ function ChartCard({ title, icon, children, className = "" }) {
 // ─── PDF Generation (synchronous — jsPDF imported at top) ─────────────────────
 function generatePDF(data) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-  const W     = 210;
-  const amber = [245, 158, 11];
-  const dark  = [17, 24, 39];
-  const mid   = [100, 116, 139];
-  const light = [248, 250, 252];
-
-  // Header bar
-  doc.setFillColor(...amber);
-  doc.rect(0, 0, W, 28, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text("Smart Campus — Admin Analytics Report", 14, 12);
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 20);
-
-  let y = 38;
-
-  // KPI row
-  const kpis = [
-    ["Total Bookings",   fmt(data.totalBookings)],
-    ["Approval Rate",    pct(data.approved, data.totalBookings)],
-    ["Active Resources", fmt(data.activeResources)],
-    ["Open Tickets",     fmt(data.openTickets)],
-  ];
-  const colW = (W - 28) / 4;
-  kpis.forEach(([label, val], i) => {
-    const x = 14 + i * colW;
-    doc.setFillColor(...light);
-    doc.roundedRect(x, y, colW - 4, 20, 3, 3, "F");
-    doc.setTextColor(...mid);
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "bold");
-    doc.text(label.toUpperCase(), x + 4, y + 7);
-    doc.setTextColor(...dark);
-    doc.setFontSize(13);
-    doc.setFont("helvetica", "bold");
-    doc.text(String(val), x + 4, y + 16);
-  });
-  y += 30;
-
-  // Section helper
-  const section = (title) => {
-    doc.setFillColor(...amber);
-    doc.rect(14, y, 3, 7, "F");
-    doc.setTextColor(...dark);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text(title, 20, y + 5.5);
-    y += 12;
+  const W = 210;
+  const H = 297;
+ 
+  // ── Palette ──────────────────────────────────────────────────────────────
+  const amber      = [245, 158, 11];
+  const amberDark  = [217, 119, 6];
+  const teal       = [20, 184, 166];
+  const tealLight  = [204, 251, 241];
+  const rose       = [244, 63, 94];
+  const indigo     = [99, 102, 241];
+  const slate      = [100, 116, 139];
+  const dark       = [17, 24, 39];
+  const navy       = [30, 41, 59];
+  const navyDeep   = [15, 23, 42];
+  const navyMid    = [51, 65, 85];
+  const textMid    = [107, 114, 128];
+  const textLight  = [156, 163, 175];
+  const bg         = [248, 250, 252];
+  const bgLight    = [241, 245, 249];
+  const white      = [255, 255, 255];
+  const border     = [229, 231, 235];
+  const amberPale  = [254, 243, 199];
+  const green      = [16, 185, 129];
+ 
+  const STATUS_COLORS = {
+    APPROVED: green, PENDING: amber, REJECTED: rose, CANCELLED: slate,
   };
-
-  // Top Resources table
-  section("Top Resources by Bookings");
-  const headers   = ["Resource", "Type", "Location", "Bookings"];
-  const colWidths = [70, 35, 50, 25];
-
-  doc.setFillColor(...amber);
-  doc.rect(14, y, W - 28, 9, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8);
+ 
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const rgb  = (arr) => ({ r: arr[0], g: arr[1], b: arr[2] });
+  const setFill   = (arr) => doc.setFillColor(arr[0], arr[1], arr[2]);
+  const setStroke = (arr) => doc.setDrawColor(arr[0], arr[1], arr[2]);
+  const setTextC  = (arr) => doc.setTextColor(arr[0], arr[1], arr[2]);
+ 
+  function roundedRect(x, y, w, h, r, fillColor, strokeColor) {
+    if (fillColor) setFill(fillColor);
+    if (strokeColor) setStroke(strokeColor);
+    const lw = strokeColor ? 0.3 : 0;
+    doc.roundedRect(x, y, w, h, r, r, strokeColor && !fillColor ? "S" : fillColor && !strokeColor ? "F" : "FD");
+  }
+ 
+  // ── Page background ───────────────────────────────────────────────────────
+  setFill(bg);
+  doc.rect(0, 0, W, H, "F");
+ 
+  // ──────────────────────────────────────────────────────────────────────────
+  // HEADER
+  // ──────────────────────────────────────────────────────────────────────────
+  const headerH = 62;
+ 
+  // Dark background
+  setFill(navy);
+  doc.rect(0, 0, W, headerH, "F");
+ 
+  // Decorative circles (top-right)
+  setFill(navyMid);
+  doc.circle(W - 18, 14, 28, "F");
+  doc.circle(W - 38, 40, 18, "F");
+ 
+  // Amber bottom stripe
+  setFill(amber);
+  doc.rect(0, headerH - 1.5, W, 1.5, "F");
+ 
+  // Logo dot
+  setFill(amber);
+  doc.circle(13, 13, 4, "F");
+  setFill(navy);
+  doc.circle(13, 13, 2, "F");
+ 
+  // Title
+  setTextC(white);
   doc.setFont("helvetica", "bold");
-  let x = 14;
-  headers.forEach((h, i) => { doc.text(h, x + 3, y + 6); x += colWidths[i]; });
-  y += 10;
-
-  (data.topResources || []).slice(0, 8).forEach((r, idx) => {
-    if (idx % 2 === 0) {
-      doc.setFillColor(248, 250, 252);
-      doc.rect(14, y, W - 28, 8, "F");
-    }
-    doc.setTextColor(...dark);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    x = 14;
-    [r.name, r.type, r.location || "—", String(r.bookingCount)].forEach((v, i) => {
-      doc.text(String(v).substring(0, 28), x + 3, y + 5.5);
-      x += colWidths[i];
-    });
-    y += 8;
-  });
-  y += 8;
-
-  // Booking status breakdown
-  if (y > 230) { doc.addPage(); y = 20; }
-  section("Booking Status Breakdown");
-  (data.statusBreakdown || []).forEach((s) => {
-    doc.setFillColor(240, 240, 240);
-    doc.roundedRect(14, y, W - 28, 7, 2, 2, "F");
-    const barW = Math.round((s.count / (data.totalBookings || 1)) * (W - 40));
-    doc.setFillColor(...amber);
-    if (barW > 0) doc.roundedRect(14, y, barW, 7, 2, 2, "F");
-    doc.setTextColor(...dark);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${s.status}   ${s.count} (${pct(s.count, data.totalBookings)})`, 17, y + 5);
-    y += 10;
-  });
-  y += 6;
-
-  // AI Forecast
-  if (y > 230) { doc.addPage(); y = 20; }
-  section("AI Demand Forecast — Next 7 Days");
-  doc.setTextColor(...mid);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "italic");
-  doc.text("Predicted booking volume based on linear trend analysis of historical data.", 14, y);
-  y += 8;
-
-  const maxPredicted = Math.max(...(data.forecast || []).map((f) => f.predicted), 1);
-  (data.forecast || []).forEach((f) => {
-    doc.setFillColor(...light);
-    doc.roundedRect(14, y, W - 28, 7, 2, 2, "F");
-    const barW = Math.round((f.predicted / maxPredicted) * (W - 60));
-    doc.setFillColor(20, 184, 166);
-    if (barW > 0) doc.roundedRect(14, y, barW, 7, 2, 2, "F");
-    doc.setTextColor(...dark);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${f.label}  →  ${f.predicted} predicted bookings`, 17, y + 5);
-    y += 10;
-  });
-
-  // Footer
-  doc.setFillColor(...amber);
-  doc.rect(0, 285, W, 12, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(7);
+  doc.setFontSize(20);
+  doc.text("Smart Campus", 22, 11);
   doc.setFont("helvetica", "normal");
-  doc.text("Smart Campus Operations Hub  •  Confidential", 14, 292);
-  doc.text("Page 1", W - 20, 292);
-
+  doc.setFontSize(10);
+  setTextC([148, 163, 184]);
+  doc.text("Admin Analytics Report", 22, 17);
+  doc.setFontSize(7.5);
+  setTextC([100, 116, 139]);
+  doc.text(`Generated  ${new Date().toLocaleString()}`, 22, 24);
+ 
+  // KPI stat cards in header
+  const kpis = [
+    ["Total Bookings",   fmt(data.totalBookings),           amber],
+    ["Approval Rate",    pct(data.approved, data.totalBookings), teal],
+    ["Active Resources", fmt(data.activeResources),         indigo],
+    ["Open Tickets",     fmt(data.openTickets),             rose],
+  ];
+  const cardW = 44;
+  const cardX0 = 14;
+  kpis.forEach(([label, val, color], i) => {
+    const cx = cardX0 + i * (cardW + 2);
+    const cy = 33;
+    setFill(navyDeep);
+    roundedRect(cx, cy, cardW, 20, 2.5, navyDeep);
+    // Color accent left bar
+    setFill(color);
+    doc.rect(cx, cy, 1.5, 20, "F");
+    // Value
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    setTextC(color);
+    doc.text(String(val), cx + 5, cy + 9);
+    // Label
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    setTextC([148, 163, 184]);
+    doc.text(label.toUpperCase(), cx + 5, cy + 15);
+  });
+ 
+  // ──────────────────────────────────────────────────────────────────────────
+  // BODY
+  // ──────────────────────────────────────────────────────────────────────────
+  let y = headerH + 8;
+  const leftX = 14;
+ 
+  // ── Section label helper ────────────────────────────────────────────────
+  function sectionLabel(text, color = amber) {
+    setFill(color);
+    doc.rect(leftX, y, 2.5, 5.5, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    setTextC(dark);
+    doc.text(text.toUpperCase(), leftX + 5, y + 4);
+    y += 9;
+  }
+ 
+  // ─────────────────────────────────────────────────────────────────────────
+  // SECTION 1 — Booking Status Breakdown
+  // ─────────────────────────────────────────────────────────────────────────
+  sectionLabel("Booking Status Breakdown");
+ 
+  const total = data.totalBookings || 1;
+  const statusBreakdown = data.statusBreakdown || [];
+  const barTrackW = 155;
+  const barH = 6.5;
+ 
+  statusBreakdown.forEach(({ status, count }) => {
+    const color = STATUS_COLORS[status] || slate;
+    const fraction = count / total;
+    const fillW = fraction * barTrackW;
+ 
+    // Track
+    setFill(bgLight);
+    roundedRect(leftX, y, barTrackW, barH, 3, bgLight);
+ 
+    // Fill
+    if (fillW > 6) {
+      roundedRect(leftX, y, fillW, barH, 3, color);
+    } else if (fillW > 0) {
+      setFill(color);
+      doc.rect(leftX, y, fillW, barH, "F");
+    }
+ 
+    // Status label (inside bar or outside)
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    setTextC(fillW > 22 ? white : dark);
+    doc.text(status, leftX + 3.5, y + 4.3);
+ 
+    // Count + pct (right of bar)
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    setTextC(textMid);
+    doc.text(`${count}  (${Math.round(fraction * 100)}%)`, leftX + barTrackW + 3, y + 4.3);
+ 
+    y += 9.5;
+  });
+ 
+  y += 4;
+ 
+  // ─────────────────────────────────────────────────────────────────────────
+  // SECTION 2 — Top Resources Table
+  // ─────────────────────────────────────────────────────────────────────────
+  sectionLabel("Top Resources by Bookings");
+ 
+  const cols = [72, 30, 18, 30];   // widths in mm
+  const heads = ["Resource", "Type", "Bookings", "Volume"];
+  const rowH = 8.5;
+  const tableW = cols.reduce((a, b) => a + b, 0);
+  const topResources = data.topResources || [];
+  const maxCount = Math.max(...topResources.map((r) => r.bookingCount), 1);
+ 
+  // Header row
+  setFill(navy);
+  roundedRect(leftX, y, tableW, rowH, 2.5, navy);
+  let cx = leftX;
+  heads.forEach((h, i) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    setTextC(white);
+    doc.text(h, cx + 3, y + 5.5);
+    cx += cols[i];
+  });
+  y += rowH;
+ 
+  topResources.slice(0, 8).forEach((r, idx) => {
+    const rowBg = idx % 2 === 0 ? [248, 250, 252] : white;
+    setFill(rowBg);
+    doc.rect(leftX, y, tableW, rowH, "F");
+ 
+    // Amber accent for top performers
+    if (r.bookingCount >= 3) {
+      setFill(amber);
+      doc.rect(leftX, y, 1.8, rowH, "F");
+    }
+ 
+    cx = leftX;
+    // Name
+    doc.setFont(r.bookingCount >= 3 ? "helvetica-bold" : "helvetica", r.bookingCount >= 3 ? "bold" : "normal");
+    doc.setFontSize(7.5);
+    setTextC(dark);
+    doc.text(String(r.name || "").substring(0, 34), cx + 3.5, y + 5.5);
+    cx += cols[0];
+ 
+    // Type badge
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    setTextC(textMid);
+    doc.text(String(r.type || ""), cx + 2, y + 5.5);
+    cx += cols[1];
+ 
+    // Count
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    setTextC(r.bookingCount > 0 ? amberDark : textLight);
+    doc.text(String(r.bookingCount), cx + 5, y + 5.5);
+    cx += cols[2];
+ 
+    // Mini bar
+    if (r.bookingCount > 0) {
+      const miniBarLen = (r.bookingCount / maxCount) * 24;
+      setFill(amberPale);
+      roundedRect(cx + 2, y + 2.5, 24, 3.5, 1.5, amberPale);
+      setFill(amber);
+      roundedRect(cx + 2, y + 2.5, miniBarLen, 3.5, 1.5, amber);
+    }
+ 
+    y += rowH;
+  });
+ 
+  // Bottom rule
+  setStroke(border);
+  doc.setLineWidth(0.4);
+  doc.line(leftX, y + 1, leftX + tableW, y + 1);
+  y += 7;
+ 
+  // ─────────────────────────────────────────────────────────────────────────
+  // SECTION 3 — AI Forecast
+  // ─────────────────────────────────────────────────────────────────────────
+  sectionLabel("AI Demand Forecast — Next 7 Days", teal);
+ 
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(7.5);
+  setTextC(textMid);
+  doc.text("Predicted booking volume based on linear trend analysis of historical data.", leftX, y);
+  y += 7;
+ 
+  const forecast = data.forecast || [];
+  const maxPred = Math.max(...forecast.map((f) => f.predicted), 1);
+  const chartH = 30;
+  const chartBottom = y + chartH;
+  const barAreaW = 155;
+  const fBarW = (barAreaW / forecast.length) - 3.5;
+ 
+  // Horizontal grid lines
+  for (let i = 1; i <= 3; i++) {
+    const gy = chartBottom - (i / 3) * chartH;
+    setStroke([226, 232, 240]);
+    doc.setLineWidth(0.35);
+    doc.line(leftX, gy, leftX + barAreaW, gy);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6);
+    setTextC(textLight);
+    doc.text(String(Math.round((i / 3) * maxPred)), leftX - 1, gy + 1.5, { align: "right" });
+  }
+ 
+  forecast.forEach((f, i) => {
+    const bx = leftX + i * (barAreaW / forecast.length) + 1.5;
+    const barHeight = maxPred > 0 ? (f.predicted / maxPred) * chartH : 2;
+    const by = chartBottom - barHeight;
+ 
+    // Shadow / glow
+    setFill(tealLight);
+    roundedRect(bx + 0.8, by + 0.8, fBarW, barHeight, 2.5, tealLight);
+    // Bar
+    setFill(teal);
+    roundedRect(bx, by, fBarW, barHeight, 2.5, teal);
+ 
+    // Value above
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    setTextC(dark);
+    doc.text(String(f.predicted), bx + fBarW / 2, by - 1.5, { align: "center" });
+ 
+    // Day label below
+    const parts = f.label.split(", ");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6);
+    setTextC(textMid);
+    doc.text(parts[0] || f.label, bx + fBarW / 2, chartBottom + 4.5, { align: "center" });
+    if (parts[1]) doc.text(parts[1], bx + fBarW / 2, chartBottom + 8.5, { align: "center" });
+  });
+ 
+  // X-axis line
+  setStroke([203, 213, 225]);
+  doc.setLineWidth(0.6);
+  doc.line(leftX, chartBottom, leftX + barAreaW, chartBottom);
+ 
+  // ──────────────────────────────────────────────────────────────────────────
+  // FOOTER
+  // ──────────────────────────────────────────────────────────────────────────
+  setFill(navy);
+  doc.rect(0, H - 13, W, 13, "F");
+  setFill(amber);
+  doc.rect(0, H - 13, W, 0.8, "F");
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  setTextC(white);
+  doc.text("Smart Campus Operations Hub  •  Confidential  •  For Internal Use Only", 14, H - 5);
+  doc.text("Page 1", W - 14, H - 5, { align: "right" });
+ 
   doc.save(`campus-analytics-${new Date().toISOString().split("T")[0]}.pdf`);
 }
+ 
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminDashboardPage() {
