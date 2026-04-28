@@ -109,7 +109,7 @@ function AppContent() {
           <Route path="bookings"            element={<BookingsPage />} />
           <Route path="maintenance/report"  element={<ReportIssuePage />} />
           <Route path="maintenance"         element={<MyTicketsPage />} />
-          <Route path="notifications"       element={<UserComingSoon />} />
+          <Route path="notifications"       element={<NotificationsPage  />} />
           <Route path="account/profile"     element={<ProfilePage />} />
           <Route path="logout"              element={<UserComingSoon />} />
         </Route>
