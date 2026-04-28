@@ -27,7 +27,9 @@ export default function Navbar() {
   const location   = useLocation();
   const isHomePage = location.pathname === "/";
 
-  // Close user menu when clicking outside
+  // Only USER role gets notifications
+  const isUser = user?.role?.toUpperCase() === "USER";
+
   useEffect(() => {
     const handler = (e) => {
       if (!e.target.closest("#user-menu-wrapper")) setUserMenuOpen(false);
@@ -163,9 +165,9 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Notification bell — only when logged in */}
-            {user && (
-              <Link to={`/${user.role?.toLowerCase()}/notifications`}
+            {/* Bell icon — only for USER role */}
+            {user && isUser && (
+              <Link to="/user/notifications"
                 aria-label="Notifications"
                 className="relative h-9 w-9 rounded-lg flex items-center justify-center
                            text-gray-500 dark:text-gray-400
@@ -175,7 +177,6 @@ export default function Navbar() {
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                 </svg>
-                {/* Unread dot */}
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-orange-500 ring-2 ring-white dark:ring-gray-950"/>
               </Link>
             )}
@@ -190,8 +191,6 @@ export default function Navbar() {
                              hover:bg-gray-200 dark:hover:bg-gray-700
                              border border-gray-200 dark:border-gray-700
                              transition-all duration-200 group">
-
-                  {/* Avatar — Google picture or initial */}
                   {user.pictureUrl ? (
                     <img src={user.pictureUrl} alt={user.name}
                       className="h-6 w-6 rounded-full object-cover ring-2 ring-orange-500/30"/>
@@ -202,13 +201,9 @@ export default function Navbar() {
                       </span>
                     </div>
                   )}
-
-                  {/* Name */}
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-200 max-w-[100px] truncate">
                     {user.name}
                   </span>
-
-                  {/* Chevron */}
                   <svg className={`h-3.5 w-3.5 text-gray-400 transition-transform duration-200 ${userMenuOpen ? "rotate-180" : ""}`}
                     fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
@@ -245,7 +240,6 @@ export default function Navbar() {
                           </p>
                         </div>
                       </div>
-                      {/* Role badge */}
                       <span className={`mt-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${getRoleBadgeColor()}`}>
                         {user.role}
                       </span>
@@ -279,18 +273,21 @@ export default function Navbar() {
                         My Profile
                       </Link>
 
-                      <Link to={`/${user.role?.toLowerCase()}/notifications`}
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm
-                                   text-gray-700 dark:text-gray-300
-                                   hover:bg-gray-100 dark:hover:bg-gray-800
-                                   transition-all duration-150">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                        </svg>
-                        Notifications
-                      </Link>
+                      {/* Notifications — only for USER role */}
+                      {isUser && (
+                        <Link to="/user/notifications"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm
+                                     text-gray-700 dark:text-gray-300
+                                     hover:bg-gray-100 dark:hover:bg-gray-800
+                                     transition-all duration-150">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                          </svg>
+                          Notifications
+                        </Link>
+                      )}
 
                       <div className="h-px bg-gray-100 dark:bg-white/8 my-1"/>
 
@@ -361,10 +358,8 @@ export default function Navbar() {
               </Link>
             ))}
 
-            {/* Mobile user section */}
             {user ? (
               <div className="mt-2 pt-2 border-t border-gray-100 dark:border-white/8 flex flex-col gap-1">
-                {/* User info */}
                 <div className="flex items-center gap-3 px-4 py-2">
                   {user.pictureUrl ? (
                     <img src={user.pictureUrl} alt={user.name} className="h-8 w-8 rounded-full object-cover"/>

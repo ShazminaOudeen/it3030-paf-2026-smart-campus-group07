@@ -1,4 +1,4 @@
-import { Sun, Moon, Bell, Search, ChevronDown } from "lucide-react";
+import { Sun, Moon, Search, ChevronDown } from "lucide-react";
 import { useTheme } from "../../shared/context/ThemeContext";
 import { useAuth } from "../../shared/context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -24,8 +24,8 @@ export default function TechnicianHeader() {
   };
 
   const displayName = getUserDisplayName(user);
-  const avatarUrl = getUserAvatar(user);
-  const userEmail = getUserEmail(user);
+  const avatarUrl   = getUserAvatar(user);
+  const userEmail   = getUserEmail(user);
   const firstLetter = displayName[0].toUpperCase();
 
   return (
@@ -46,9 +46,7 @@ export default function TechnicianHeader() {
         <kbd className="ml-auto text-[10px] bg-surface-border dark:bg-white/10 rounded px-1.5 py-0.5 font-mono">⌘K</kbd>
       </div>
 
-      <button className="relative p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-surface-muted dark:hover:bg-white/8 transition-colors">
-        <Bell size={19} />
-      </button>
+      {/* Bell icon removed — Technician does not use notifications */}
 
       <button onClick={toggleTheme}
         className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-surface-muted dark:hover:bg-white/8 transition-colors"

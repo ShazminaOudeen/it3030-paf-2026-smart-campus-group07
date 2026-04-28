@@ -95,7 +95,7 @@ function AppContent() {
           <Route path="maintenance"              element={<AdminAllTicketsPage />} />
           <Route path="maintenance/assign"       element={<AdminAssignTechnicianPage />} />
           <Route path="management/users"         element={<AdminUserManagement />} />
-          <Route path="management/notifications" element={<NotificationsPage />} />
+          
           <Route path="account/profile"          element={<ProfilePage />} />
           <Route path="logout"                   element={<AdminComingSoon />} />
         </Route>
@@ -122,7 +122,7 @@ function AppContent() {
           <Route path="tickets/open"        element={<TechnicianOpenTicketsPage />} />
           <Route path="tickets/resolved"    element={<TechnicianResolvedPage />} />
           <Route path="resources"           element={<UserFacilitiesPage />} />
-          <Route path="notifications"       element={<NotificationsPage />} />
+        
           <Route path="account/profile"     element={<ProfilePage />} />
           <Route path="logout"              element={<TechnicianComingSoon />} />
         </Route>
