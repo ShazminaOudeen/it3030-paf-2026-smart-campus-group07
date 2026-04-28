@@ -6,32 +6,35 @@ import axios from "axios";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Parses "HH:mm-HH:mm" availability window and checks if current time falls within it.
- * Returns { available: boolean, windowLabel: string } or null if window is not set.
+ * Parses "HH:mm-HH:mm" availability window.
+ * Returns { startMins, endMins, windowLabel } or null if not set / malformed.
  */
-function checkAvailabilityWindow(availabilityWindow) {
-  if (!availabilityWindow) return null; // no restriction — always available
-
+function parseAvailabilityWindow(availabilityWindow) {
+  if (!availabilityWindow) return null;
   try {
     const [startStr, endStr] = availabilityWindow.split("-");
     const [startH, startM]   = startStr.trim().split(":").map(Number);
     const [endH,   endM]     = endStr.trim().split(":").map(Number);
-
-    const now        = new Date();
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
-    const startMins  = startH * 60 + startM;
-    const endMins    = endH   * 60 + endM;
-
     const fmt = (h, m) =>
       `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-
     return {
-      available:   nowMinutes >= startMins && nowMinutes <= endMins,
+      startMins:   startH * 60 + startM,
+      endMins:     endH   * 60 + endM,
       windowLabel: `${fmt(startH, startM)} – ${fmt(endH, endM)}`,
     };
   } catch {
-    return null; // malformed window — fail open
+    return null; // malformed — fail open
   }
+}
+
+/**
+ * Returns true if a "HH:mm" time string falls within [startMins, endMins].
+ */
+function timeWithinWindow(timeStr, startMins, endMins) {
+  if (!timeStr) return true; // not filled in yet — don't block
+  const [h, m] = timeStr.split(":").map(Number);
+  const mins   = h * 60 + m;
+  return mins >= startMins && mins <= endMins;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -57,12 +60,12 @@ export default function BookingForm({ onSubmit, loading, error }) {
 
   // Fetch active resources once
   useEffect(() => {
-  axios.get("/api/resources?status=ACTIVE")
-    .then(({ data }) => {
-      setResources(Array.isArray(data) ? data : (data?.content ?? []));
-    })
-    .catch(() => setResources([]));
-}, []);
+    axios.get("/api/resources?status=ACTIVE")
+      .then(({ data }) => {
+        setResources(Array.isArray(data) ? data : (data?.content ?? []));
+      })
+      .catch(() => setResources([]));
+  }, []);
 
   // Derive the full selected resource object from the current resourceId
   const selectedResource = useMemo(
@@ -70,12 +73,22 @@ export default function BookingForm({ onSubmit, loading, error }) {
     [resources, form.resourceId]
   );
 
-  const isEquipment      = selectedResource?.type === "EQUIPMENT";
-  const availabilityInfo = useMemo(
-    () => checkAvailabilityWindow(selectedResource?.availabilityWindow),
+  const isEquipment = selectedResource?.type === "EQUIPMENT";
+
+  // Parse the availability window for the selected resource
+  const windowInfo = useMemo(
+    () => parseAvailabilityWindow(selectedResource?.availabilityWindow),
     [selectedResource]
   );
-  const outsideWindow = availabilityInfo !== null && !availabilityInfo.available;
+
+  // Check if start/end times violate the window
+  const startOutside = windowInfo
+    ? !timeWithinWindow(form.startTime, windowInfo.startMins, windowInfo.endMins)
+    : false;
+  const endOutside = windowInfo
+    ? !timeWithinWindow(form.endTime, windowInfo.startMins, windowInfo.endMins)
+    : false;
+  const anyOutside = startOutside || endOutside;
 
   const set = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -87,12 +100,14 @@ export default function BookingForm({ onSubmit, loading, error }) {
       ...prev,
       resourceId:        id,
       expectedAttendees: "",
+      startTime:         "",
+      endTime:           "",
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (outsideWindow) return; // guard — button should already be disabled
+    if (anyOutside) return; // guard — button should already be disabled
     onSubmit({
       ...form,
       expectedAttendees: !isEquipment && form.expectedAttendees
@@ -100,6 +115,14 @@ export default function BookingForm({ onSubmit, loading, error }) {
         : undefined,
     });
   };
+
+  // Build min/max for time inputs when a window is defined
+  const windowMinTime = windowInfo
+    ? `${String(Math.floor(windowInfo.startMins / 60)).padStart(2, "0")}:${String(windowInfo.startMins % 60).padStart(2, "0")}`
+    : undefined;
+  const windowMaxTime = windowInfo
+    ? `${String(Math.floor(windowInfo.endMins / 60)).padStart(2, "0")}:${String(windowInfo.endMins % 60).padStart(2, "0")}`
+    : undefined;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -130,27 +153,27 @@ export default function BookingForm({ onSubmit, loading, error }) {
         </select>
       </div>
 
-      {/* Availability window warning — shown only when outside the allowed window */}
-      {selectedResource && outsideWindow && (
+      {/* Availability window violation banner */}
+      {selectedResource && windowInfo && anyOutside && (
         <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl
           bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30
           text-sm text-amber-700 dark:text-amber-400">
           <AlertTriangle size={15} className="mt-0.5 shrink-0" />
           <span>
-            <span className="font-semibold">{selectedResource.name}</span> is only available
-            between <span className="font-semibold">{availabilityInfo.windowLabel}</span>.
-            Bookings cannot be made outside this window.
+            <span className="font-semibold">{selectedResource.name}</span> is only bookable
+            between <span className="font-semibold">{windowInfo.windowLabel}</span>.
+            Please adjust your selected times.
           </span>
         </div>
       )}
 
       {/* Availability window info — shown when inside the window */}
-      {selectedResource && availabilityInfo && !outsideWindow && (
+      {selectedResource && windowInfo && !anyOutside && (
         <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl
           bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30
           text-xs text-green-700 dark:text-green-400">
           <Clock size={12} className="shrink-0" />
-          Available window: <span className="font-semibold ml-1">{availabilityInfo.windowLabel}</span>
+          Available window: <span className="font-semibold ml-1">{windowInfo.windowLabel}</span>
         </div>
       )}
 
@@ -181,9 +204,16 @@ export default function BookingForm({ onSubmit, loading, error }) {
             type="time"
             value={form.startTime}
             onChange={set("startTime")}
+            min={windowMinTime}
+            max={windowMaxTime}
             required
-            className={inputClass}
+            className={`${inputClass} ${startOutside ? "border-amber-400 ring-1 ring-amber-400" : ""}`}
           />
+          {startOutside && (
+            <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+              Must be within {windowInfo.windowLabel}
+            </p>
+          )}
         </div>
         <div>
           <label className={labelClass}>End Time</label>
@@ -191,9 +221,16 @@ export default function BookingForm({ onSubmit, loading, error }) {
             type="time"
             value={form.endTime}
             onChange={set("endTime")}
+            min={windowMinTime}
+            max={windowMaxTime}
             required
-            className={inputClass}
+            className={`${inputClass} ${endOutside ? "border-amber-400 ring-1 ring-amber-400" : ""}`}
           />
+          {endOutside && (
+            <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+              Must be within {windowInfo.windowLabel}
+            </p>
+          )}
         </div>
       </div>
 
@@ -246,7 +283,6 @@ export default function BookingForm({ onSubmit, loading, error }) {
               : ""
           }`}
         />
-        {/* Capacity hint for rooms */}
         {!isEquipment && selectedResource?.capacity && (
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
             Max capacity: {selectedResource.capacity}
@@ -256,8 +292,8 @@ export default function BookingForm({ onSubmit, loading, error }) {
 
       <button
         type="submit"
-        disabled={loading || outsideWindow}
-        title={outsideWindow ? `Booking only allowed ${availabilityInfo?.windowLabel}` : undefined}
+        disabled={loading || anyOutside}
+        title={anyOutside ? `Booking only allowed ${windowInfo?.windowLabel}` : undefined}
         className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl
           bg-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed
           text-white font-semibold text-sm transition-colors"

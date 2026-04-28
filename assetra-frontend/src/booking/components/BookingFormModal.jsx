@@ -1,14 +1,41 @@
 // booking/components/BookingFormModal.jsx
-// ─── Module B entry point ───────────────────────────────────────────────────
-// This modal is opened when the user clicks "Book Now" from the resource detail.
-// It handles the full booking form (date, time range, purpose, attendees).
-// Implementation is owned by Member 2 (Booking module).
-
-import { useState, useCallback } from "react";
-import { X, Calendar, Clock, Users, FileText, Loader2, CheckCircle } from "lucide-react";
+import { useState, useCallback, useMemo } from "react";
+import { X, Calendar, Clock, Users, FileText, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import axios from "axios";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Parses "HH:mm-HH:mm" availability window.
+ * Returns { startMins, endMins, windowLabel } or null if not set / malformed.
+ */
+function parseAvailabilityWindow(availabilityWindow) {
+  if (!availabilityWindow) return null;
+  try {
+    const [startStr, endStr] = availabilityWindow.split("-");
+    const [startH, startM]   = startStr.trim().split(":").map(Number);
+    const [endH,   endM]     = endStr.trim().split(":").map(Number);
+    const fmt = (h, m) =>
+      `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    return {
+      startMins:   startH * 60 + startM,
+      endMins:     endH   * 60 + endM,
+      windowLabel: `${fmt(startH, startM)} – ${fmt(endH, endM)}`,
+    };
+  } catch {
+    return null; // malformed — fail open
+  }
+}
+
+/**
+ * Returns true if a "HH:mm" time string falls within [startMins, endMins].
+ */
+function timeWithinWindow(timeStr, startMins, endMins) {
+  if (!timeStr) return true; // not filled in yet — don't block
+  const [h, m] = timeStr.split(":").map(Number);
+  const mins   = h * 60 + m;
+  return mins >= startMins && mins <= endMins;
+}
 
 /** Always returns today's date string in YYYY-MM-DD, evaluated at call time. */
 const getToday = () => new Date().toISOString().split("T")[0];
@@ -40,34 +67,44 @@ function Field({ label, error, icon: Icon, children }) {
 }
 
 function Input({ className = "", ...props }) {
-  return (
-    <input
-      className={`${baseInputClass} ${className}`}
-      {...props}
-    />
-  );
+  return <input className={`${baseInputClass} ${className}`} {...props} />;
 }
 
 // ─── Initial form state factory ───────────────────────────────────────────────
 
 const makeInitialForm = () => ({
-  bookingDate: getToday(),
-  startTime: "09:00",
-  endTime: "10:00",
-  purpose: "",
+  bookingDate:       getToday(),
+  startTime:         "09:00",
+  endTime:           "10:00",
+  purpose:           "",
   expectedAttendees: "",
 });
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function BookingFormModal({ resource, onClose, onSuccess }) {
-  const [form, setForm] = useState(makeInitialForm);
+  const [form, setForm]   = useState(makeInitialForm);
   const [errors, setErrors]   = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const today  = getToday(); // evaluated per render so it stays current
-  const isRoom = resource.type !== "EQUIPMENT"; // attendees field only shown for rooms/facilities
+  const today  = getToday();
+  const isRoom = resource.type !== "EQUIPMENT";
+
+  // Parse the resource's availability window once
+  const windowInfo = useMemo(
+    () => parseAvailabilityWindow(resource?.availabilityWindow),
+    [resource]
+  );
+
+  // Derive per-field window violations (only when a window is defined)
+  const startOutside = windowInfo
+    ? !timeWithinWindow(form.startTime, windowInfo.startMins, windowInfo.endMins)
+    : false;
+  const endOutside = windowInfo
+    ? !timeWithinWindow(form.endTime, windowInfo.startMins, windowInfo.endMins)
+    : false;
+  const anyOutside = startOutside || endOutside;
 
   const set = useCallback((k, v) => {
     setForm((prev) => ({ ...prev, [k]: v }));
@@ -85,16 +122,22 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
       e.bookingDate = "Date cannot be in the past";
     }
 
-    if (!form.startTime) e.startTime = "Start time is required";
-    if (!form.endTime)   e.endTime   = "End time is required";
+    if (!form.startTime) {
+      e.startTime = "Start time is required";
+    } else if (startOutside) {
+      e.startTime = `Must be within ${windowInfo.windowLabel}`;
+    }
 
-    if (form.startTime && form.endTime && form.startTime >= form.endTime)
+    if (!form.endTime) {
+      e.endTime = "End time is required";
+    } else if (endOutside) {
+      e.endTime = `Must be within ${windowInfo.windowLabel}`;
+    } else if (form.startTime && form.endTime && form.startTime >= form.endTime) {
       e.endTime = "End time must be after start time";
+    }
 
-    if (!form.purpose.trim())
-      e.purpose = "Purpose is required";
+    if (!form.purpose.trim()) e.purpose = "Purpose is required";
 
-    // Attendees — only validated when the field is shown (i.e. rooms/facilities)
     if (isRoom) {
       const attendees = Number(form.expectedAttendees);
       if (form.expectedAttendees !== "" && attendees < 1)
@@ -108,7 +151,7 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
 
   // ─── Submit ─────────────────────────────────────────────────────────────────
 
- const handleSubmit = async () => {
+  const handleSubmit = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
 
@@ -126,10 +169,7 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
       });
 
       setSuccess(true);
-      setTimeout(() => {
-        onSuccess?.();
-        onClose();
-      }, 1800);
+      setTimeout(() => { onSuccess?.(); onClose(); }, 1800);
 
     } catch (err) {
       const msg = err.response?.data?.message ?? "Booking failed. Please try again.";
@@ -142,6 +182,7 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
       setLoading(false);
     }
   };
+
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -190,6 +231,31 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
           <>
             <div className="p-6 space-y-4">
 
+              {/* Availability window info banner */}
+              {windowInfo && !anyOutside && (
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl
+                  bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30
+                  text-xs text-green-700 dark:text-green-400">
+                  <Clock size={12} className="shrink-0" />
+                  Available window:
+                  <span className="font-semibold ml-1">{windowInfo.windowLabel}</span>
+                </div>
+              )}
+
+              {/* Availability window violation banner */}
+              {windowInfo && anyOutside && (
+                <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl
+                  bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30
+                  text-sm text-amber-700 dark:text-amber-400">
+                  <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                  <span>
+                    <span className="font-semibold">{resource.name}</span> is only bookable
+                    between <span className="font-semibold">{windowInfo.windowLabel}</span>.
+                    Please adjust your selected times.
+                  </span>
+                </div>
+              )}
+
               {/* Global conflict / general error banners */}
               {errors._conflict && (
                 <div role="alert" className="flex items-start gap-2 px-4 py-3 rounded-xl
@@ -225,6 +291,8 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
                     type="time"
                     value={form.startTime}
                     aria-required="true"
+                    min={windowInfo ? `${String(Math.floor(windowInfo.startMins / 60)).padStart(2,"0")}:${String(windowInfo.startMins % 60).padStart(2,"0")}` : undefined}
+                    max={windowInfo ? `${String(Math.floor(windowInfo.endMins / 60)).padStart(2,"0")}:${String(windowInfo.endMins % 60).padStart(2,"0")}` : undefined}
                     onChange={(e) => set("startTime", e.target.value)}
                   />
                 </Field>
@@ -233,6 +301,8 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
                     type="time"
                     value={form.endTime}
                     aria-required="true"
+                    min={windowInfo ? `${String(Math.floor(windowInfo.startMins / 60)).padStart(2,"0")}:${String(windowInfo.startMins % 60).padStart(2,"0")}` : undefined}
+                    max={windowInfo ? `${String(Math.floor(windowInfo.endMins / 60)).padStart(2,"0")}:${String(windowInfo.endMins % 60).padStart(2,"0")}` : undefined}
                     onChange={(e) => set("endTime", e.target.value)}
                   />
                 </Field>
@@ -250,7 +320,7 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
                 />
               </Field>
 
-              {/* Expected Attendees — hidden for equipment, shown for rooms/facilities */}
+              {/* Expected Attendees */}
               {isRoom && (
                 <Field
                   label={resource.capacity
@@ -287,7 +357,8 @@ export default function BookingFormModal({ resource, onClose, onSuccess }) {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={loading}
+                disabled={loading || anyOutside}
+                title={anyOutside ? `Booking only allowed ${windowInfo?.windowLabel}` : undefined}
                 className="flex items-center gap-2 px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600
                   text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
