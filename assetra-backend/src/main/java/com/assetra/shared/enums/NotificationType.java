@@ -1,3 +1,4 @@
+//assetra-backend/src/main/java/com/assetra/shared/enums/NotificationType.java
 package com.assetra.shared.enums;
 
 public enum NotificationType {
