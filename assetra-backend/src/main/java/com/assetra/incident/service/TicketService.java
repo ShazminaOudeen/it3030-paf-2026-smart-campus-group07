@@ -3,6 +3,8 @@ package com.assetra.incident.service;
 import com.assetra.incident.dto.*;
 import com.assetra.incident.entity.*;
 import com.assetra.incident.repository.*;
+import com.assetra.notification.service.NotificationService;
+import com.assetra.shared.enums.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +22,7 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketImageRepository ticketImageRepository;
     private final CommentRepository commentRepository;
+    private final NotificationService notificationService; // ← ADDED
 
     private final String uploadDir = "uploads/tickets/";
 
@@ -83,8 +86,19 @@ public class TicketService {
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
         ticket.setAssignedTo(technicianId);
         ticket.setStatus("IN_PROGRESS");
-        ticket.setAssignedAt(LocalDateTime.now()); // ← NEW
-        return mapToDTO(ticketRepository.save(ticket));
+        ticket.setAssignedAt(LocalDateTime.now());
+        Ticket saved = ticketRepository.save(ticket);
+
+        // ← ADDED: notify ticket owner
+        notificationService.createNotification(
+            saved.getUserId(),
+            NotificationType.TICKET_UPDATED,
+            "Your ticket is now IN_PROGRESS — a technician has been assigned.",
+            saved.getId(),
+            "TICKET"
+        );
+
+        return mapToDTO(saved);
     }
 
     public TicketResponseDTO updateStatus(UUID ticketId, String status,
@@ -94,11 +108,21 @@ public class TicketService {
         ticket.setStatus(status);
         if (notes != null) ticket.setResolutionNotes(notes);
         if (reason != null) ticket.setRejectionReason(reason);
-        // ← NEW: set resolvedAt when status changes to RESOLVED
         if ("RESOLVED".equals(status) && ticket.getResolvedAt() == null) {
             ticket.setResolvedAt(LocalDateTime.now());
         }
-        return mapToDTO(ticketRepository.save(ticket));
+        Ticket saved = ticketRepository.save(ticket);
+
+        // ← ADDED: notify ticket owner
+        notificationService.createNotification(
+            saved.getUserId(),
+            NotificationType.TICKET_UPDATED,
+            "Your ticket status has been updated to: " + status,
+            saved.getId(),
+            "TICKET"
+        );
+
+        return mapToDTO(saved);
     }
 
     public CommentResponseDTO addComment(UUID ticketId, UUID userId, String content) {
@@ -110,7 +134,20 @@ public class TicketService {
         comment.setContent(content);
         comment.setCreatedAt(LocalDateTime.now());
         comment.setUpdatedAt(LocalDateTime.now());
-        return mapCommentToDTO(commentRepository.save(comment));
+        CommentResponseDTO saved = mapCommentToDTO(commentRepository.save(comment));
+
+        // ← ADDED: only notify if commenter is NOT the ticket owner
+        if (!userId.equals(ticket.getUserId())) {
+            notificationService.createNotification(
+                ticket.getUserId(),
+                NotificationType.COMMENT_ADDED,
+                "A new comment was added to your ticket.",
+                ticket.getId(),
+                "TICKET"
+            );
+        }
+
+        return saved;
     }
 
     public CommentResponseDTO updateComment(UUID commentId, UUID userId, String content) {
@@ -152,8 +189,8 @@ public class TicketService {
         dto.setAssignedTo(t.getAssignedTo());
         dto.setResolutionNotes(t.getResolutionNotes());
         dto.setCreatedAt(t.getCreatedAt());
-        dto.setAssignedAt(t.getAssignedAt()); // ← NEW
-        dto.setResolvedAt(t.getResolvedAt()); // ← NEW
+        dto.setAssignedAt(t.getAssignedAt());
+        dto.setResolvedAt(t.getResolvedAt());
         return dto;
     }
 
