@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./shared/context/ThemeContext";
@@ -11,7 +10,6 @@ import Footer from "./shared/components/Footer";
 import HomePage from "./pages/HomePage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import UserDashboardPage from "./pages/UserDashboardPage";
-
 
 // ── Member 4 — Auth / Notifications ──
 import RegisterPage        from "./notification/pages/RegisterPage";
@@ -90,7 +88,7 @@ function AppContent() {
         {/* ── Admin ── */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index                           element={<AdminComingSoon />} />
-          <Route path="dashboard"                 element={<AdminDashboardPage />} />
+          <Route path="dashboard"                element={<AdminDashboardPage />} />
           <Route path="resources"                element={<AdminFacilitiesPage />} />
           <Route path="resources/add"            element={<AdminFacilitiesPage />} />
           <Route path="bookings"                 element={<AdminBookingsPage />} />
@@ -98,7 +96,6 @@ function AppContent() {
           <Route path="maintenance"              element={<AdminAllTicketsPage />} />
           <Route path="maintenance/assign"       element={<AdminAssignTechnicianPage />} />
           <Route path="management/users"         element={<AdminUserManagement />} />
-          
           <Route path="account/profile"          element={<ProfilePage />} />
           <Route path="logout"                   element={<AdminComingSoon />} />
         </Route>
@@ -111,8 +108,9 @@ function AppContent() {
           <Route path="bookings/new"        element={<NewBookingPage />} />
           <Route path="bookings"            element={<BookingsPage />} />
           <Route path="maintenance/report"  element={<ReportIssuePage />} />
+          <Route path="maintenance/:id"     element={<TicketDetailPage />} />
           <Route path="maintenance"         element={<MyTicketsPage />} />
-          <Route path="notifications"       element={<NotificationsPage  />} />
+          <Route path="notifications"       element={<NotificationsPage />} />
           <Route path="account/profile"     element={<ProfilePage />} />
           <Route path="logout"              element={<UserComingSoon />} />
         </Route>
@@ -125,7 +123,6 @@ function AppContent() {
           <Route path="tickets/open"        element={<TechnicianOpenTicketsPage />} />
           <Route path="tickets/resolved"    element={<TechnicianResolvedPage />} />
           <Route path="resources"           element={<UserFacilitiesPage />} />
-        
           <Route path="account/profile"     element={<ProfilePage />} />
           <Route path="logout"              element={<TechnicianComingSoon />} />
         </Route>
