@@ -22,7 +22,7 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketImageRepository ticketImageRepository;
     private final CommentRepository commentRepository;
-    private final NotificationService notificationService; // ← ADDED
+    private final NotificationService notificationService;
 
     private final String uploadDir = "uploads/tickets/";
 
@@ -34,6 +34,7 @@ public class TicketService {
 
         Ticket ticket = new Ticket();
         ticket.setUserId(userId);
+        ticket.setUserName(dto.getUserName()); // ← NEW: save name
         ticket.setResourceId(dto.getResourceId());
         ticket.setCategory(dto.getCategory());
         ticket.setDescription(dto.getDescription());
@@ -89,7 +90,6 @@ public class TicketService {
         ticket.setAssignedAt(LocalDateTime.now());
         Ticket saved = ticketRepository.save(ticket);
 
-        // ← ADDED: notify ticket owner
         notificationService.createNotification(
             saved.getUserId(),
             NotificationType.TICKET_UPDATED,
@@ -113,7 +113,6 @@ public class TicketService {
         }
         Ticket saved = ticketRepository.save(ticket);
 
-        // ← ADDED: notify ticket owner
         notificationService.createNotification(
             saved.getUserId(),
             NotificationType.TICKET_UPDATED,
@@ -136,7 +135,6 @@ public class TicketService {
         comment.setUpdatedAt(LocalDateTime.now());
         CommentResponseDTO saved = mapCommentToDTO(commentRepository.save(comment));
 
-        // ← ADDED: only notify if commenter is NOT the ticket owner
         if (!userId.equals(ticket.getUserId())) {
             notificationService.createNotification(
                 ticket.getUserId(),
@@ -179,6 +177,7 @@ public class TicketService {
         TicketResponseDTO dto = new TicketResponseDTO();
         dto.setId(t.getId());
         dto.setUserId(t.getUserId());
+        dto.setUserName(t.getUserName()); // ← NEW: map name
         dto.setResourceId(t.getResourceId());
         dto.setCategory(t.getCategory());
         dto.setDescription(t.getDescription());

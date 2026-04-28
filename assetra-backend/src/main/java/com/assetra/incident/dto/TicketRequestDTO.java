@@ -10,4 +10,5 @@ public class TicketRequestDTO {
     private String description;
     private String priority;
     private String contactDetails;
+    private String userName; // ← NEW
 }

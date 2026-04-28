@@ -83,7 +83,12 @@ export default function ReportIssuePage() {
     setError("");
     try {
       const formData = new FormData();
-      const ticketBlob = new Blob([JSON.stringify(form)], { type: "application/json" });
+      // ← NEW: include userName from logged-in user
+      const ticketPayload = {
+        ...form,
+        userName: user.name || user.email || "Unknown User",
+      };
+      const ticketBlob = new Blob([JSON.stringify(ticketPayload)], { type: "application/json" });
       formData.append("ticket", ticketBlob);
       files.forEach((f) => formData.append("files", f));
       await createTicket(formData, user.id);
