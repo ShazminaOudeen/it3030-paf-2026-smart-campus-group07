@@ -17,6 +17,9 @@ public class Ticket {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
+    @Column(name = "user_name", length = 255)
+    private String userName; // ← NEW
+
     @Column(name = "resource_id")
     private UUID resourceId;
 
@@ -47,7 +50,6 @@ public class Ticket {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // ← NEW: for service-level timer
     @Column(name = "assigned_at")
     private LocalDateTime assignedAt;
 

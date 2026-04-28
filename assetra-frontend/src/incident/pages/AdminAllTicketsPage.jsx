@@ -147,9 +147,23 @@ export default function AdminAllTicketsPage() {
                       </span>
                     </div>
                     <p className="text-sm text-gray-400 mb-2">{ticket.description}</p>
-                    <div className="flex items-center gap-3 text-xs text-gray-600 mb-3">
+
+                    {/* ── Meta row with reported-by name ── */}
+                    <div className="flex items-center gap-3 text-xs text-gray-500 mb-3 flex-wrap">
                       <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
                       {ticket.contactDetails && <span>📞 {ticket.contactDetails}</span>}
+
+                      {/* ← NEW: reported by name pill */}
+                      {(ticket.userName || ticket.userId) && (
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg
+                                         bg-violet-500/10 border border-violet-500/20 text-violet-300">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          {ticket.userName || `User: ${ticket.userId?.toString().slice(0, 8)}…`}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">
