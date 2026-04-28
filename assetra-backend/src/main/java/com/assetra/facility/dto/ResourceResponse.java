@@ -7,6 +7,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+//response
+
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class ResourceResponse {
 

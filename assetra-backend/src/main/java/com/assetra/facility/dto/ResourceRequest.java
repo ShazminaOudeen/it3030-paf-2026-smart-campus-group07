@@ -1,3 +1,4 @@
+
 package com.assetra.facility.dto;
 
 import com.assetra.facility.enums.ResourceStatus;
@@ -7,6 +8,8 @@ import lombok.*;
 
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class ResourceRequest {
+
+    //valid
 
     @NotBlank(message = "Resource name is required")
     @Size(max = 255, message = "Name must be under 255 characters")
