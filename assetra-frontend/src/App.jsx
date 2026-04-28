@@ -22,7 +22,7 @@ import NotificationsPage   from "./notification/pages/NotificationsPage";
 // ── Member 3 — Incidents ──
 import ReportIssuePage           from "./incident/pages/ReportIssuePage";
 import MyTicketsPage             from "./incident/pages/MyTicketsPage";
-import TicketDetailPage          from "./incident/pages/TicketDetailPage";   // ← NEW
+import TicketDetailPage          from "./incident/pages/TicketDetailPage";
 import AdminAllTicketsPage       from "./incident/pages/AdminAllTicketsPage";
 import AdminAssignTechnicianPage from "./incident/pages/AdminAssignTechnicianPage";
 import TechnicianAssignedPage    from "./incident/pages/TechnicianAssignedPage";
