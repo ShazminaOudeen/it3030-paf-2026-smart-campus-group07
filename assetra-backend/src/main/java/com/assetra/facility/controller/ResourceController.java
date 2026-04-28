@@ -27,7 +27,7 @@ public class ResourceController {
     private final ResourceService resourceService;
 
     /**
-     * GET /api/resources
+     * GET /api/resources.
      * Publicly accessible – users and admins can browse resources.
      */
     @GetMapping
@@ -52,7 +52,7 @@ public class ResourceController {
     }
 
     /**
-     * GET /api/resources/stats
+     * GET /api/resources/stats.
      * MUST be declared before /{id} — otherwise Spring treats "stats" as a UUID
      * path variable and throws a MethodArgumentTypeMismatchException (400/500)
      * before this method is ever reached.
@@ -73,7 +73,7 @@ public class ResourceController {
     }
 
     /**
-     * POST /api/resources
+     * POST /api/resources.
      * Create a new resource (ADMIN only).
      */
     @PostMapping
@@ -97,7 +97,7 @@ public class ResourceController {
     }
 
     /**
-     * PATCH /api/resources/{id}/status
+     * PATCH /api/resources/{id}/status.
      * Update only the status of a resource (ADMIN only).
      */
     @PatchMapping("/{id}/status")
