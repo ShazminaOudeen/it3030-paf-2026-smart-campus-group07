@@ -1,7 +1,35 @@
 import { useEffect, useState } from "react";
 import { getAllTickets, updateTicketStatus } from "../api/ticketApi";
-import { useAuth } from "../../shared/context/AuthContext"; // ✅ import auth
+import { useAuth } from "../../shared/context/AuthContext";
 
+// ── Inline API helpers (matching your TicketController routes) ──────────────
+const API_BASE = "/api/tickets";
+
+async function fetchComments(ticketId) {
+  const res = await fetch(`${API_BASE}/${ticketId}/comments`);
+  if (!res.ok) throw new Error("Failed to fetch comments");
+  return res.json();
+}
+
+async function postComment(ticketId, userId, content) {
+  const res = await fetch(`${API_BASE}/${ticketId}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-User-Id": userId },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) throw new Error("Failed to post comment");
+  return res.json();
+}
+
+async function deleteCommentApi(commentId, userId) {
+  const res = await fetch(`${API_BASE}/comments/${commentId}`, {
+    method: "DELETE",
+    headers: { "X-User-Id": userId },
+  });
+  if (!res.ok) throw new Error("Failed to delete comment");
+}
+
+// ── Status config ────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
   IN_PROGRESS: { color: "bg-amber-500/15 text-amber-400 border-amber-500/25", dot: "bg-amber-400" },
   RESOLVED:    { color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25", dot: "bg-emerald-400" },
@@ -9,32 +37,207 @@ const STATUS_CONFIG = {
   OPEN:        { color: "bg-blue-500/15 text-blue-400 border-blue-500/25", dot: "bg-blue-400" },
 };
 
+// ── Comment section component ────────────────────────────────────────────────
+function CommentSection({ ticketId, userId }) {
+  const [comments, setComments]     = useState([]);
+  const [loadingCmts, setLoadingCmts] = useState(true);
+  const [newComment, setNewComment] = useState("");
+  const [posting, setPosting]       = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [expanded, setExpanded]     = useState(false);
+  const [error, setError]           = useState("");
+
+  // Load comments when section is expanded
+  useEffect(() => {
+    if (!expanded) return;
+    setLoadingCmts(true);
+    fetchComments(ticketId)
+      .then(setComments)
+      .catch(() => setError("Could not load comments."))
+      .finally(() => setLoadingCmts(false));
+  }, [expanded, ticketId]);
+
+  const handlePost = async () => {
+    if (!newComment.trim()) return;
+    setPosting(true);
+    setError("");
+    try {
+      const created = await postComment(ticketId, userId, newComment.trim());
+      setComments((prev) => [...prev, created]);
+      setNewComment("");
+    } catch {
+      setError("Failed to post comment.");
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const handleDelete = async (commentId) => {
+    setDeletingId(commentId);
+    setError("");
+    try {
+      await deleteCommentApi(commentId, userId);
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+    } catch {
+      setError("Failed to delete comment.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  return (
+    <div className="mt-4 border-t border-white/8 pt-4">
+      {/* Toggle header */}
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-orange-400 transition-colors mb-3"
+      >
+        <svg
+          className={`w-3.5 h-3.5 transition-transform ${expanded ? "rotate-90" : ""}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+        {expanded ? "Hide Comments" : "Show Comments"}
+        {!expanded && comments.length > 0 && (
+          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-[10px]">
+            {comments.length}
+          </span>
+        )}
+      </button>
+
+      {expanded && (
+        <div className="space-y-3">
+          {/* Error */}
+          {error && (
+            <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+
+          {/* Comment list */}
+          {loadingCmts ? (
+            <div className="flex items-center gap-2 py-3">
+              <div className="w-4 h-4 border border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+              <span className="text-xs text-gray-500">Loading comments…</span>
+            </div>
+          ) : comments.length === 0 ? (
+            <p className="text-xs text-gray-600 italic py-2">No comments yet. Be the first!</p>
+          ) : (
+            <ul className="space-y-2">
+              {comments.map((c) => (
+                <li
+                  key={c.id}
+                  className="flex items-start justify-between gap-3 px-3 py-2.5 rounded-xl
+                             bg-white/4 border border-white/6"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-orange-400 mb-0.5 truncate">
+                      {c.authorName ?? c.userId ?? "Technician"}
+                    </p>
+                    <p className="text-sm text-gray-300 break-words">{c.content}</p>
+                    {c.createdAt && (
+                      <p className="text-[10px] text-gray-600 mt-1">
+                        {new Date(c.createdAt).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Delete — only show for own comments */}
+                  {(c.userId === userId || c.authorId === userId) && (
+                    <button
+                      onClick={() => handleDelete(c.id)}
+                      disabled={deletingId === c.id}
+                      title="Delete comment"
+                      className="flex-shrink-0 mt-0.5 p-1.5 rounded-lg text-gray-600
+                                 hover:text-red-400 hover:bg-red-500/10
+                                 transition-all disabled:opacity-40"
+                    >
+                      {deletingId === c.id ? (
+                        <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                        </svg>
+                      ) : (
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      )}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* New comment input */}
+          <div className="flex gap-2 mt-2">
+            <input
+              type="text"
+              placeholder="Add a comment…"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handlePost()}
+              className="flex-1 px-3 py-2 rounded-xl border border-white/8
+                         bg-gray-50 dark:bg-[#0f0f1a]
+                         text-sm text-gray-900 dark:text-gray-300
+                         placeholder-gray-400 dark:placeholder-gray-600
+                         focus:outline-none focus:border-orange-500/40 transition-all"
+            />
+            <button
+              onClick={handlePost}
+              disabled={posting || !newComment.trim()}
+              className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600
+                         text-white text-xs font-semibold shadow-lg shadow-orange-500/20
+                         transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed
+                         flex items-center gap-1.5"
+            >
+              {posting ? (
+                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              )}
+              Post
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
 export default function TechnicianAssignedPage() {
-  const { user } = useAuth(); // ✅ get logged-in user
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [notes, setNotes] = useState({});
+  const { user } = useAuth();
+  const [tickets, setTickets]   = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [notes, setNotes]       = useState({});
   const [updating, setUpdating] = useState(null);
 
   useEffect(() => {
-    if (!user?.id) return; // wait until user is loaded
-
+    if (!user?.id) return;
     getAllTickets()
-      .then((res) =>
-        // ✅ compare against real logged-in technician's ID
-        setTickets(res.data.filter((t) => t.assignedTo === user.id))
-      )
+      .then((res) => setTickets(res.data.filter((t) => t.assignedTo === user.id)))
       .catch(() => setTickets([]))
       .finally(() => setLoading(false));
-  }, [user?.id]); // ✅ re-run if user changes
+  }, [user?.id]);
 
   const handleStatusUpdate = async (ticketId, status) => {
     setUpdating(ticketId + status);
     try {
       await updateTicketStatus(ticketId, { status, resolutionNotes: notes[ticketId] || "" });
       setTickets((prev) => prev.map((t) => t.id === ticketId ? { ...t, status } : t));
-    } catch { alert("Failed to update status"); }
-    finally { setUpdating(null); }
+    } catch {
+      alert("Failed to update status");
+    } finally {
+      setUpdating(null);
+    }
   };
 
   if (loading || !user) return (
@@ -61,8 +264,8 @@ export default function TechnicianAssignedPage() {
           </svg>
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">Assigned to Me</h1>
-          <p className="text-sm text-gray-400">{tickets.length} ticket(s) assigned to you</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Assigned to Me</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{tickets.length} ticket(s) assigned to you</p>
         </div>
       </div>
 
@@ -80,17 +283,20 @@ export default function TechnicianAssignedPage() {
           {tickets.map((ticket) => {
             const status = STATUS_CONFIG[ticket.status] || STATUS_CONFIG.OPEN;
             return (
-              <div key={ticket.id} className="ticket-card p-5 rounded-2xl border border-white/8 bg-white/4">
+              <div key={ticket.id}
+                className="ticket-card p-5 rounded-2xl border border-white/8 dark:border-white/8
+                           bg-white/4 dark:bg-white/4">
+
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-white">{ticket.category}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{ticket.category}</span>
                       <span className="text-xs text-orange-400 font-medium">{ticket.priority}</span>
                     </div>
-                    <p className="text-sm text-gray-400">{ticket.description}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{ticket.description}</p>
                     {ticket.contactDetails && (
-                      <p className="text-xs text-gray-600 mt-1">📞 {ticket.contactDetails}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">📞 {ticket.contactDetails}</p>
                     )}
                   </div>
                   <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border whitespace-nowrap ${status.color}`}>
@@ -99,23 +305,26 @@ export default function TechnicianAssignedPage() {
                   </span>
                 </div>
 
-                {/* Notes */}
+                {/* Resolution notes */}
                 <textarea
                   placeholder="Add resolution notes here..."
                   value={notes[ticket.id] || ""}
                   onChange={(e) => setNotes({ ...notes, [ticket.id]: e.target.value })}
                   rows={2}
-                  className="w-full px-4 py-3 rounded-xl border border-white/8 bg-[#0f0f1a]
-                             text-sm text-gray-300 placeholder-gray-600 resize-none mb-3
-                             focus:outline-none focus:border-orange-500/40 focus:bg-orange-500/5 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-white/8 dark:border-white/8
+                             bg-gray-50 dark:bg-[#0f0f1a]
+                             text-sm text-gray-900 dark:text-gray-300
+                             placeholder-gray-400 dark:placeholder-gray-600
+                             resize-none mb-3 focus:outline-none
+                             focus:border-orange-500/40 transition-all"
                 />
 
-                {/* Action buttons */}
+                {/* Status buttons */}
                 <div className="flex gap-2 flex-wrap">
                   {[
-                    { status: "IN_PROGRESS", label: "In Progress",  color: "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20" },
-                    { status: "RESOLVED",    label: "Mark Resolved", color: "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20" },
-                    { status: "CLOSED",      label: "Close Ticket",  color: "bg-gray-600 hover:bg-gray-700 shadow-gray-500/20" },
+                    { status: "IN_PROGRESS", label: "In Progress",   color: "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20" },
+                    { status: "RESOLVED",    label: "Mark Resolved",  color: "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20" },
+                    { status: "CLOSED",      label: "Close Ticket",   color: "bg-gray-600 hover:bg-gray-700 shadow-gray-500/20" },
                   ].map((btn) => (
                     <button key={btn.status}
                       onClick={() => handleStatusUpdate(ticket.id, btn.status)}
@@ -134,6 +343,9 @@ export default function TechnicianAssignedPage() {
                     </button>
                   ))}
                 </div>
+
+                {/* ── Comment section (new) ── */}
+                <CommentSection ticketId={ticket.id} userId={user.id} />
               </div>
             );
           })}
