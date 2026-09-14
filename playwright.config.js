@@ -13,13 +13,13 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-     webServer: {
-      cwd: './frontend',
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  webServer: {
+  command: 'npm run dev',
+  cwd: './assetra-frontend',
+  url: 'http://localhost:5173',
+  reuseExistingServer: !process.env.CI,
+  timeout: 120 * 1000,
+},
   
   projects: [
     {
