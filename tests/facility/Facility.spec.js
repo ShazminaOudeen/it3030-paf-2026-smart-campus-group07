@@ -99,8 +99,11 @@ async function mockResourcesApi(page) {
       })
   );
   // Single resource (PATCH / DELETE)
+  // Exclude "/stats" so this catch-all doesn't shadow the dedicated stats
+  // route above (Playwright matches the most-recently-registered handler
+  // first, and "/api/resources/stats" also matches this regex).
   await page.route(
-    (url) => /\/api\/resources\/[^/]+$/.test(url.pathname),
+    (url) => /\/api\/resources\/[^/]+$/.test(url.pathname) && !url.pathname.endsWith("/stats"),
     (route) => {
       const method = route.request().method();
       if (method === "DELETE") return route.fulfill({ status: 204, body: "" });
@@ -361,8 +364,13 @@ test.describe("ResourceFilters – user view", () => {
     await expect(dot).toBeVisible();
   });
 
-  // FIX 1: Re-query the typeSelect locator after re-opening the panel,
-  // because Clear closes the panel and removes the select from the DOM.
+  // FIX 1: The advanced panel's open/closed state (showAdvanced) lives in
+  // ResourceFilters' own local state and is never touched by clearAll() —
+  // clicking Clear resets the filter values but does NOT close the panel.
+  // So we must NOT click "Filters" again after Clear: the panel is already
+  // open, and a second click would toggle it shut, which is what caused
+  // this test to fail (the select briefly existed, then vanished when the
+  // test's own extra click closed the panel).
   test("selecting a type and clearing resets the dropdown", async ({ page }) => {
     await page.locator("button", { hasText: /Filters/ }).click();
     const typeSelect = page.locator("select").filter({
@@ -371,18 +379,13 @@ test.describe("ResourceFilters – user view", () => {
     await typeSelect.selectOption("LAB");
     await expect(typeSelect).toHaveValue("LAB");
 
-    // Clear closes the panel — just verify the Clear button disappears (filter was reset)
+    // Clicking Clear resets the filters but leaves the panel open.
     await page.locator("button", { hasText: /Clear/ }).click();
     await expect(page.locator("button", { hasText: /Clear/ })).not.toBeVisible();
 
-    // Re-open the panel and confirm the type is back to default.
-    // Re-query the select after the panel re-opens — the previous DOM node was removed.
-    await page.locator("button", { hasText: /Filters/ }).click();
-    const resetTypeSelect = page.locator("select").filter({
-      has: page.locator("option", { hasText: "All Types" }),
-    });
-    await expect(resetTypeSelect).toBeVisible();
-    await expect(resetTypeSelect).toHaveValue("");
+    // The select never left the DOM — just confirm it's reset to default.
+    await expect(typeSelect).toBeVisible();
+    await expect(typeSelect).toHaveValue("");
   });
 });
 
