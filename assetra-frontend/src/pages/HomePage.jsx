@@ -1,10 +1,17 @@
 // src/pages/HomePage.jsx
 // Animated homepage for Assetra — Smart Campus Operations Hub
-// Hero uses a faded campus illustration with enhanced glittering particles
-// Sections animate in on scroll via IntersectionObserver
+//
+// Layout: full-bleed hero (grayscale campus photo spans the entire hero,
+// edge-to-edge on desktop; text sits on top with a left-edge gradient so
+// it stays legible), a small icon strip below the hero, then a new
+// "Overview" section (grayscale campus-photo grid + checklist + stat,
+// matching Assetra's real feature set), then the existing
+// Features / How-it-works / Roles / CTA sections. The hero and its photo
+// overlay are theme-aware: gradients and background swap between a
+// light and a dark variant depending on the app's light/dark mode.
 
 import { Link } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ─── tiny icon components ────────────────────────────────────────────────────
 
@@ -71,6 +78,24 @@ function IconArrow({ className }) {
     </svg>
   );
 }
+function IconUsers({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  );
+}
+function IconClock({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12 6 12 12 16 14"/>
+    </svg>
+  );
+}
 
 // ─── data ────────────────────────────────────────────────────────────────────
 
@@ -88,6 +113,24 @@ const STATS = [
   { value: "20",  suffix: "+", label: "REST Endpoints"         },
   { value: "100", suffix: "%", label: "Conflict-Free Bookings" },
   { value: "3",   suffix: "",  label: "User Roles"             },
+];
+
+// Icon strip shown directly under the hero — mirrors the reference layout's
+// three-icon row ("Top Ranked", "100% Placement", "World Class") but says
+// something true about Assetra instead.
+const HERO_HIGHLIGHTS = [
+  { icon: IconClock,    label: "Book in seconds"     },
+  { icon: IconUsers,    label: "Built for 3 roles"   },
+  { icon: IconShield,   label: "Fully audited"        },
+];
+
+// Checklist copy for the new Overview section — each line maps to a real,
+// shipped Assetra capability (booking engine, RBAC, incident workflow),
+// nothing invented.
+const OVERVIEW_POINTS = [
+  "Automatic conflict detection on every booking request",
+  "Role-based access for Users, Admins, and Technicians",
+  "Incident tickets tracked from OPEN through CLOSED",
 ];
 
 const WORKFLOW = [
@@ -118,247 +161,149 @@ const ROLES = [
   },
 ];
 
-// ─── Particle Canvas ──────────────────────────────────────────────────────────
+// ─── Grayscale campus photo slideshow ─────────────────────────────────────────
+// Real campus/lecture-hall photography (Unsplash License — free for
+// commercial use, no attribution required), fully desaturated via CSS
+// grayscale(), crossfaded on a timer with a slow Ken Burns drift on each
+// slide. The panel is now full-bleed across the entire hero (edge to edge
+// on desktop, a full-width band on mobile) instead of a small rounded card.
 
-function ParticleCanvas() {
-  const canvasRef = useRef(null);
+const SLIDES = [
+  {
+    // Rows of empty seats in a dark auditorium — Denise Schuld, Unsplash License
+    src: "https://images.unsplash.com/photo-1641735123823-90856d1efd39?auto=format&fit=crop&w=2400&q=80",
+    kenburns: "kb-zoom-in",
+  },
+  {
+    // Inside a university library, empty tables — Thomas Hoang, Unsplash License
+    src: "https://images.unsplash.com/photo-1753328603655-a42ba8f025f3?auto=format&fit=crop&w=2400&q=80",
+    kenburns: "kb-pan-right",
+  },
+  {
+    // Empty lecture room, wide shot — Changbok Ko, Unsplash License
+    src: "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=2400&q=80",
+    kenburns: "kb-zoom-out",
+  },
+  {
+    // People seated in a university lecture room — Dom Fou, Unsplash License
+    src: "https://images.unsplash.com/photo-1606761568499-6d2451b23c66?auto=format&fit=crop&w=2400&q=80",
+    kenburns: "kb-pan-right",
+  },
+];
+
+const SLIDE_DURATION = 5000;
+
+// Static grayscale photo grid for the Overview section — reuses the same
+// vetted, licensed auditorium / lecture-hall photography as the hero
+// slideshow (minus the library shot, which reads more "study space" than
+// "lecture hall or theatre"), just laid out as three fixed images plus a
+// stat card instead of a crossfading slideshow.
+const OVERVIEW_PHOTOS = [
+  {
+    // Rows of empty seats in a dark auditorium — Denise Schuld, Unsplash License
+    src: "https://images.unsplash.com/photo-1641735123823-90856d1efd39?auto=format&fit=crop&w=1400&q=80",
+    alt: "Empty rows of seating in a campus auditorium",
+  },
+  {
+    // People seated in a university lecture room — Dom Fou, Unsplash License
+    src: "https://images.unsplash.com/photo-1606761568499-6d2451b23c66?auto=format&fit=crop&w=1400&q=80",
+    alt: "Students seated in a university lecture room",
+  },
+  {
+    // Empty lecture room, wide shot — Changbok Ko, Unsplash License
+    src: "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=1400&q=80",
+    alt: "Wide view of an empty lecture theatre",
+  },
+];
+
+// Full-bleed hero photo panel. On mobile it's a full-width band at the top
+// of the hero (edge to edge since the hero itself carries no horizontal
+// padding). From `lg` up it becomes absolutely positioned, filling the
+// entire right side of the hero from its very top to its very bottom.
+// Every overlay gradient is defined with a light-mode color and a
+// dark-mode color (`dark:` variant) so the blend always matches whichever
+// theme is active, instead of being hardcoded to one background.
+function CampusPhotoPanel() {
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-
-    const COLORS = [
-      [165, 180, 252], // lavender
-      [249, 115, 22],  // orange
-      [255, 255, 255], // white
-      [99,  102, 241], // indigo
-      [251, 146, 60],  // light orange
-    ];
-
-    const PARTICLE_COUNT = 180;
-    let particles = [];
-    let frame = 0;
-    let animId;
-
-    function spawn(overrideY) {
-      const col = COLORS[Math.floor(Math.random() * COLORS.length)];
-      const isStar = Math.random() > 0.5;
-      return {
-        x: Math.random() * canvas.width,
-        y: overrideY !== undefined ? overrideY : Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: -Math.random() * 0.35 - 0.05,
-        r: isStar ? Math.random() * 1.5 + 0.4 : Math.random() * 2.2 + 0.6,
-        alpha: Math.random() * 0.7 + 0.2,
-        alphaDir: Math.random() > 0.5 ? 1 : -1,
-        alphaSpeed: Math.random() * 0.006 + 0.002,
-        maxAlpha: Math.random() * 0.75 + 0.2,
-        minAlpha: 0.05,
-        color: col,
-        isStar,
-        twinkleOffset: Math.random() * Math.PI * 2,
-        twinkleSpeed: Math.random() * 0.03 + 0.01,
-      };
-    }
-
-    function resize() {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-
-    resize();
-    window.addEventListener("resize", resize);
-
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      particles.push(spawn());
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      frame++;
-      const t = frame * 0.01;
-
-      for (const p of particles) {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.alpha += p.alphaDir * p.alphaSpeed;
-        if (p.alpha > p.maxAlpha) { p.alpha = p.maxAlpha; p.alphaDir = -1; }
-        if (p.alpha < p.minAlpha) { p.alpha = p.minAlpha; p.alphaDir =  1; }
-
-        // recycle when off-screen top
-        if (p.y < -10) {
-          const np = spawn(canvas.height + 10);
-          Object.assign(p, np);
-          continue;
-        }
-
-        const [r, g, b] = p.color;
-
-        if (p.isStar) {
-          const twinkle = 0.5 + 0.5 * Math.sin(t * p.twinkleSpeed * 60 + p.twinkleOffset);
-          const a = p.alpha * (0.3 + 0.7 * twinkle);
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
-          ctx.fill();
-
-          // cross-flare on bright twinkling stars
-          if (p.r > 1.0 && twinkle > 0.65) {
-            const len = p.r * 4.5;
-            ctx.strokeStyle = `rgba(${r},${g},${b},${(a * 0.55).toFixed(3)})`;
-            ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(p.x - len, p.y); ctx.lineTo(p.x + len, p.y);
-            ctx.moveTo(p.x, p.y - len); ctx.lineTo(p.x, p.y + len);
-            ctx.stroke();
-          }
-        } else {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${r},${g},${b},${p.alpha})`;
-          ctx.fill();
-        }
-      }
-
-      animId = requestAnimationFrame(draw);
-    }
-
-    draw();
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", resize);
-    };
+    const id = setInterval(() => {
+      setActive((i) => (i + 1) % SLIDES.length);
+    }, SLIDE_DURATION);
+    return () => clearInterval(id);
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ zIndex: 1 }}
-    />
-  );
-}
+    <div
+      className="relative w-full h-[300px] xs:h-[360px] sm:h-[440px]
+                 lg:h-auto lg:absolute lg:inset-y-0 lg:right-0 lg:w-[56%]
+                 overflow-hidden select-none bg-gray-50 dark:bg-[#0a0a0f]
+                 transition-colors duration-300"
+    >
+      {/* Slides — masked on the left edge (desktop only) so each photo fades
+         to fully transparent and reveals the panel's own background behind
+         it. This guarantees a seamless match regardless of how bright or
+         dark any given photo is, unlike a solid overlay colour which can
+         still show a faint step against certain images. */}
+      {SLIDES.map((slide, i) => (
+        <img
+          key={slide.src}
+          src={slide.src}
+          alt=""
+          aria-hidden="true"
+          className={`kb-slide hero-photo-mask ${slide.kenburns} absolute inset-0 w-full h-full object-cover
+                     transition-opacity duration-[1400ms] ease-in-out
+                     ${i === active ? "opacity-100" : "opacity-0"}`}
+          style={{
+            filter: "grayscale(1) contrast(1.05) brightness(1.02)",
+            animationPlayState: i === active ? "running" : "paused",
+          }}
+          loading={i === 0 ? "eager" : "lazy"}
+        />
+      ))}
 
-// ─── Campus Hero Background ───────────────────────────────────────────────────
+      {/* Very light darkening wash — dark mode only, keeps the photo crisp in
+         light mode. Masked the same as the photo itself so this doesn't
+         create its own hard edge at the panel boundary. */}
+      <div className="absolute inset-0 pointer-events-none dark:bg-black/25 hero-photo-mask" />
 
-function CampusHeroBackground() {
-  return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none">
-      {/* Sky */}
+      {/* Top edge — soft vignette so the photo doesn't start with a hard line */}
       <div
-        className="absolute inset-0"
-        style={{ background: "linear-gradient(180deg, #050508 0%, #0c0c18 40%, #0f0f1e 100%)" }}
+        className="absolute inset-x-0 top-0 h-1/6 pointer-events-none
+                   bg-gradient-to-b from-gray-50/80 to-transparent
+                   dark:from-[#0a0a0f]/80 dark:to-transparent
+                   transition-colors duration-300"
+      />
+      {/* Bottom edge — blends the photo into the hero background below it
+         (and, on mobile, into the copy that follows) */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-1/4 pointer-events-none
+                   bg-gradient-to-t from-gray-50 via-gray-50/25 to-transparent
+                   dark:from-[#0a0a0f] dark:via-[#0a0a0f]/25 dark:to-transparent
+                   transition-colors duration-300"
       />
 
-      {/* Campus SVG illustration */}
-      <svg
-        className="absolute bottom-0 left-0 w-full"
-        style={{ height: "75%", opacity: 0.18 }}
-        viewBox="0 0 1200 420"
-        preserveAspectRatio="xMidYMax meet"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {/* Clock tower / admin building */}
-        <rect x="540" y="80" width="120" height="340" fill="#a5b4fc" opacity="0.4"/>
-        <rect x="560" y="40" width="80" height="60" fill="#a5b4fc" opacity="0.4"/>
-        <rect x="590" y="10" width="20" height="40" fill="#c7d2fe" opacity="0.5"/>
-        <rect x="555" y="95"  width="30" height="40" fill="#1e1b4b" opacity="0.6"/>
-        <rect x="615" y="95"  width="30" height="40" fill="#1e1b4b" opacity="0.6"/>
-        <rect x="555" y="155" width="30" height="40" fill="#1e1b4b" opacity="0.6"/>
-        <rect x="615" y="155" width="30" height="40" fill="#1e1b4b" opacity="0.6"/>
-        <rect x="555" y="215" width="30" height="40" fill="#1e1b4b" opacity="0.6"/>
-        <rect x="615" y="215" width="30" height="40" fill="#1e1b4b" opacity="0.6"/>
-        <circle cx="600" cy="62" r="18" fill="#1e1b4b" opacity="0.7"/>
-        <circle cx="600" cy="62" r="14" fill="#6366f1" opacity="0.25"/>
-
-        {/* Library */}
-        <rect x="300" y="160" width="200" height="260" fill="#818cf8" opacity="0.3"/>
-        <rect x="280" y="200" width="240" height="220" fill="#818cf8" opacity="0.15"/>
-        {[310, 340, 370, 400, 430, 460].map((x) => (
-          <rect key={x} x={x} y="200" width="12" height="180" fill="#c7d2fe" opacity="0.35"/>
-        ))}
-        <polygon points="280,200 480,200 380,150" fill="#a5b4fc" opacity="0.3"/>
-        {[320, 360, 400, 440].map((x) => (
-          <rect key={`lw1-${x}`} x={x} y="260" width="24" height="36" fill="#1e1b4b" opacity="0.7"/>
-        ))}
-        {[320, 360, 400, 440].map((x) => (
-          <rect key={`lw2-${x}`} x={x} y="320" width="24" height="36" fill="#1e1b4b" opacity="0.7"/>
-        ))}
-
-        {/* Science block */}
-        <rect x="700" y="140" width="220" height="280" fill="#818cf8" opacity="0.28"/>
-        <rect x="720" y="120" width="180" height="30" fill="#a5b4fc" opacity="0.3"/>
-        <rect x="740" y="100" width="140" height="30" fill="#a5b4fc" opacity="0.25"/>
-        {[710, 750, 790, 830, 870].map((x) =>
-          [155, 205, 255, 305, 355].map((y) => (
-            <rect key={`sw-${x}-${y}`} x={x} y={y} width="22" height="30" fill="#1e1b4b" opacity="0.65"/>
-          ))
-        )}
-
-        {/* Left dormitory */}
-        <rect x="0"  y="200" width="260" height="220" fill="#6366f1" opacity="0.18"/>
-        <rect x="20" y="180" width="220" height="30"  fill="#818cf8" opacity="0.25"/>
-        {[20, 60, 100, 140, 180, 220].map((x) =>
-          [210, 260, 310].map((y) => (
-            <rect key={`dw-${x}-${y}`} x={x} y={y} width="28" height="36" fill="#1e1b4b" opacity="0.55"/>
-          ))
-        )}
-
-        {/* Right wing / gym */}
-        <rect x="960" y="220" width="240" height="200" fill="#6366f1" opacity="0.18"/>
-        <rect x="960" y="200" width="240" height="28"  fill="#818cf8" opacity="0.22"/>
-        <rect x="1050" y="310" width="60" height="110" fill="#0c0c18" opacity="0.8"/>
-        <ellipse cx="1080" cy="310" rx="30" ry="20"   fill="#0c0c18" opacity="0.8"/>
-        {[975, 1025, 1110, 1160].map((x) => (
-          <rect key={`gw1-${x}`} x={x} y="240" width="32" height="42" fill="#1e1b4b" opacity="0.6"/>
-        ))}
-        {[975, 1025, 1110, 1160].map((x) => (
-          <rect key={`gw2-${x}`} x={x} y="300" width="32" height="42" fill="#1e1b4b" opacity="0.6"/>
-        ))}
-
-        {/* Ground & paths */}
-        <rect x="0" y="390" width="1200" height="30" fill="#312e81" opacity="0.3"/>
-        <line x1="600" y1="390" x2="600" y2="420" stroke="#818cf8" strokeWidth="2"   opacity="0.4"/>
-        <line x1="380" y1="390" x2="320" y2="420" stroke="#818cf8" strokeWidth="1.5" opacity="0.25"/>
-        <line x1="820" y1="390" x2="880" y2="420" stroke="#818cf8" strokeWidth="1.5" opacity="0.25"/>
-        <rect x="0" y="410" width="1200" height="10" fill="#4338ca" opacity="0.2"/>
-
-        {/* Tree silhouettes */}
-        {[80, 170, 500, 700, 880, 1050, 1150].map((x, i) => (
-          <g key={`tree-${i}`}>
-            <rect    x={x + 8} y={330 + (i % 2) * 10} width="4" height="70" fill="#312e81" opacity="0.4"/>
-            <ellipse cx={x + 10} cy={310 + (i % 2) * 10} rx="18" ry="30"    fill="#312e81" opacity="0.35"/>
-          </g>
-        ))}
-
-        {/* Stars */}
-        {[100, 200, 350, 450, 700, 850, 950, 1050, 1100].map((x, i) => (
-          <circle key={`star-${i}`} cx={x} cy={30 + (i * 7) % 60} r="1.2" fill="white" opacity="0.5"/>
-        ))}
-      </svg>
-
-      {/* Depth fog */}
+      {/* Orange brand glow — radial, anchored at the bottom-right corner, so
+         it fades outward in every direction with no straight edge anywhere */}
       <div
-        className="absolute inset-0"
-        style={{ background: "linear-gradient(180deg, transparent 0%, transparent 40%, #0a0a0f 92%)" }}
-      />
-
-      {/* Particle layer */}
-      <ParticleCanvas />
-
-      {/* Orange brand glow at ground level */}
-      <div
-        className="absolute bottom-0 left-1/2 -translate-x-1/2"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          width: "60%",
-          height: "180px",
-          background: "radial-gradient(ellipse at center bottom, rgba(249,115,22,0.07) 0%, transparent 70%)",
-          zIndex: 2,
+          background:
+            "radial-gradient(140% 110% at 100% 100%, rgba(249,115,22,0.24) 0%, rgba(249,115,22,0.12) 40%, rgba(249,115,22,0.04) 65%, transparent 82%)",
         }}
       />
+
+      {/* Slide indicators */}
+      <div className="absolute top-4 left-4 flex gap-1.5">
+        {SLIDES.map((_, i) => (
+          <span
+            key={i}
+            className={`h-1 rounded-full transition-all duration-500 ${
+              i === active ? "w-6 bg-orange-400" : "w-3 bg-white/40"
+            }`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -386,11 +331,19 @@ function useScrollReveal(selector, options = {}) {
 // ─── component ───────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  // Attach scroll reveal to each animated class
+  const [heroLoaded, setHeroLoaded] = useState(false);
+
   useScrollReveal(".sr-feat");
   useScrollReveal(".sr-workflow");
   useScrollReveal(".sr-role");
   useScrollReveal(".sr-cta");
+  useScrollReveal(".sr-overview");
+
+  // Single orchestrated hero entrance, fired once on mount.
+  useEffect(() => {
+    const t = requestAnimationFrame(() => setHeroLoaded(true));
+    return () => cancelAnimationFrame(t);
+  }, []);
 
   // Mouse-tracking glow on feature cards
   useEffect(() => {
@@ -407,10 +360,63 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300 overflow-x-hidden">
 
-      {/* ── SCROLL REVEAL STYLES (injected once) ─────────────────────── */}
+      {/* ── STYLES (injected once) ──────────────────────────────────── */}
       <style>{`
+        @media (prefers-reduced-motion: reduce) {
+          .hero-in, .sr-feat, .sr-workflow, .sr-role, .sr-cta, .sr-overview { transition: none !important; }
+          .kb-slide { animation: none !important; }
+        }
+
+        /* ── hero photo: mask the left edge on desktop so it fades to the
+           panel's own background with a guaranteed-seamless match ── */
+        .hero-photo-mask { -webkit-mask-image: none; mask-image: none; }
+        @media (min-width: 1024px) {
+          .hero-photo-mask {
+            -webkit-mask-image: linear-gradient(to right,
+              transparent 0%, transparent 3%,
+              rgba(0,0,0,0.15) 15%, rgba(0,0,0,0.4) 30%,
+              rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.92) 60%, black 72%);
+            mask-image: linear-gradient(to right,
+              transparent 0%, transparent 3%,
+              rgba(0,0,0,0.15) 15%, rgba(0,0,0,0.4) 30%,
+              rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.92) 60%, black 72%);
+          }
+        }
+
+        /* ── hero photo slideshow: slow Ken Burns drift per slide ── */
+        .kb-slide { animation-duration: 8s; animation-timing-function: ease-out; animation-fill-mode: forwards; }
+        @keyframes kbZoomIn  { from { transform: scale(1);    } to { transform: scale(1.04); } }
+        @keyframes kbZoomOut { from { transform: scale(1.04); } to { transform: scale(1);    } }
+        @keyframes kbPanRight{ from { transform: scale(1.02) translateX(-1%); } to { transform: scale(1.02) translateX(1%); } }
+        .kb-zoom-in   { animation-name: kbZoomIn;   }
+        .kb-zoom-out  { animation-name: kbZoomOut;  }
+        .kb-pan-right { animation-name: kbPanRight; }
+
+        /* ── hero entrance (single orchestrated sequence) ── */
+        .hero-in {
+          opacity: 0;
+          transform: translateY(18px);
+          transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22,1,0.36,1);
+        }
+        .hero-in.hero-in-visible { opacity: 1; transform: translateY(0); }
+        .hero-in[data-d="0"] { transition-delay: 0.05s; }
+        .hero-in[data-d="1"] { transition-delay: 0.15s; }
+        .hero-in[data-d="2"] { transition-delay: 0.25s; }
+        .hero-in[data-d="3"] { transition-delay: 0.35s; }
+        .hero-in[data-d="4"] { transition-delay: 0.45s; }
+        .hero-in[data-d="5"] { transition-delay: 0.10s; }
+
+        /* ── overview section (single reveal, not staggered per item —
+           the hero already carries the page's "moment") ── */
+        .sr-overview {
+          opacity: 0;
+          transform: translateY(24px);
+          transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1);
+        }
+        .sr-overview.sr-visible { opacity: 1; transform: translateY(0); }
+
         /* ── feature cards ── */
         .sr-feat {
           opacity: 0;
@@ -425,47 +431,26 @@ export default function HomePage() {
         .sr-feat:nth-child(5) { transition-delay: 0.32s; }
         .sr-feat:nth-child(6) { transition-delay: 0.40s; }
 
-        /* mouse-tracking glow */
-        .feat-card-glow {
-          position: relative;
-          overflow: hidden;
-        }
+        .feat-card-glow { position: relative; overflow: hidden; }
         .feat-card-glow::before {
           content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          background: radial-gradient(
-            circle at var(--mx, 50%) var(--my, 50%),
-            rgba(249,115,22,0.07) 0%,
-            transparent 65%
-          );
-          opacity: 0;
-          transition: opacity 0.3s;
-          pointer-events: none;
+          position: absolute; inset: 0; border-radius: inherit;
+          background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(249,115,22,0.07) 0%, transparent 65%);
+          opacity: 0; transition: opacity 0.3s; pointer-events: none;
         }
         .feat-card-glow:hover::before { opacity: 1; }
-
-        /* shimmer sweep */
         .feat-card-glow::after {
           content: '';
-          position: absolute;
-          top: 0; left: -100%;
-          width: 60%; height: 100%;
+          position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
           background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
-          transition: left 0.6s ease;
-          pointer-events: none;
+          transition: left 0.6s ease; pointer-events: none;
         }
         .feat-card-glow:hover::after { left: 150%; }
-
-        /* icon bounce on card hover */
         .feat-card-glow:hover .feat-icon-inner {
           background: rgba(249,115,22,0.22) !important;
           transform: scale(1.12) rotate(-4deg);
         }
-        .feat-icon-inner {
-          transition: background 0.3s, transform 0.3s;
-        }
+        .feat-icon-inner { transition: background 0.3s, transform 0.3s; }
 
         /* ── workflow cards ── */
         .sr-workflow {
@@ -478,8 +463,6 @@ export default function HomePage() {
         .sr-workflow:nth-child(2) { transition-delay: 0.12s; }
         .sr-workflow:nth-child(3) { transition-delay: 0.24s; }
         .sr-workflow:nth-child(4) { transition-delay: 0.36s; }
-
-        /* step-num bounce on hover */
         .sr-workflow:hover .step-num-inner {
           background: rgba(249,115,22,0.20) !important;
           border-color: rgba(249,115,22,0.65) !important;
@@ -504,126 +487,249 @@ export default function HomePage() {
           transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
         }
         .sr-cta.sr-visible { opacity: 1; transform: scale(1); }
-
-        /* floating orbs inside CTA */
         @keyframes floatOrb {
           0%,100% { transform: scale(1);    }
           50%      { transform: scale(1.15); }
         }
-        .cta-orb { animation: floatOrb 6s ease-in-out infinite; }
+        .cta-orb   { animation: floatOrb 6s ease-in-out infinite; }
         .cta-orb-2 { animation: floatOrb 6s ease-in-out infinite; animation-delay: -3s; }
       `}</style>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      {/* No horizontal padding on the section itself — the photo panel needs
+         to touch the true edges of the viewport. Padding lives on the inner
+         wrapper instead, around the text/grid/stats content only. */}
       <section
         id="hero"
-        className="relative overflow-hidden bg-[#0a0a0f] rounded-none
-                   flex flex-col items-center justify-center
-                   min-h-[600px] px-6 pt-20 pb-24"
+        className="relative isolate overflow-hidden bg-gray-50 dark:bg-[#0a0a0f] transition-colors duration-300 pt-16 pb-16 sm:pt-20 sm:pb-20"
       >
-        <CampusHeroBackground />
-
-        {/* Subtle grid overlay */}
+        {/* faint grid backdrop, kept subtle so it doesn't compete with the photo panel */}
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none opacity-60"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-            maskImage: "radial-gradient(ellipse at 50% 40%, black 30%, transparent 80%)",
-            zIndex: 2,
+              "linear-gradient(rgba(99,102,241,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.035) 1px, transparent 1px)",
+            backgroundSize: "56px 56px",
+            maskImage: "radial-gradient(ellipse at 30% 30%, black 20%, transparent 75%)",
           }}
         />
 
-        <div className="relative z-10 flex flex-col items-center text-center max-w-3xl">
+        {/* Full-bleed photo — mobile: full-width band at the top of the
+           hero. Desktop: absolutely filled against the right edge, top to
+           bottom of the section. */}
+        <CampusPhotoPanel />
 
-          {/* Badge */}
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full
-                          border border-orange-500/35 bg-orange-500/10
-                          px-4 py-1.5 text-xs font-semibold uppercase tracking-widest
-                          text-orange-400">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping
-                               rounded-full bg-orange-400 opacity-75"/>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-orange-500"/>
-            </span>
-            Smart Campus Operations Hub
-          </div>
+        <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-14 items-center">
 
-          {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-[60px] font-bold leading-[1.08]
-                         tracking-tight text-white mb-5">
-            Manage every{" "}
-            <span className="relative text-orange-500">
-              campus resource
-              <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 300 8"
-                   fill="none" preserveAspectRatio="none">
-                <path d="M2 6 C60 2, 160 2, 298 5" stroke="#f97316"
-                      strokeWidth="2.5" strokeLinecap="round" opacity="0.55"/>
-              </svg>
-            </span>{" "}
-            in one place
-          </h1>
+            {/* ── copy ── */}
+            <div className="flex flex-col items-start text-left">
 
-          {/* Sub */}
-          <p className="text-base sm:text-lg text-gray-400 leading-relaxed max-w-xl mb-8">
-            Assetra unifies facility bookings, asset management, and incident
-            ticketing into one modern platform with full auditability and role-based access.
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Link
-              to="/facilities"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
-                         bg-orange-500 hover:bg-orange-600
-                         text-white text-sm font-semibold
-                         shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50
-                         hover:scale-[1.03] transition-all duration-200"
-            >
-              Explore Facilities <IconArrow className="h-4 w-4"/>
-            </Link>
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
-                         border border-white/10 bg-white/5
-                         text-gray-200 text-sm font-semibold
-                         hover:bg-white/10 hover:scale-[1.03]
-                         transition-all duration-200"
-            >
-              Sign in with Google
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.83z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
-              </svg>
-            </Link>
-          </div>
-
-          {/* Stats bar */}
-          <div className="mt-14 w-full max-w-xl grid grid-cols-4 gap-px
-                          rounded-2xl overflow-hidden
-                          border border-white/8 bg-white/8">
-            {STATS.map(({ value, suffix, label }) => (
-              <div key={label}
-                   className="flex flex-col items-center justify-center py-4 px-2
-                              bg-[#0c0c16]">
-                <span className="font-bold text-2xl text-white">
-                  {value}<span className="text-orange-500">{suffix}</span>
+              <div
+                data-d="0"
+                className={`hero-in ${heroLoaded ? "hero-in-visible" : ""}
+                           mb-5 inline-flex items-center gap-2 rounded-full
+                           border border-orange-500/35 bg-orange-500/10
+                           px-4 py-1.5 text-xs font-semibold uppercase tracking-widest
+                           text-orange-600 dark:text-orange-400`}
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping
+                                   rounded-full bg-orange-400 opacity-75"/>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-orange-500"/>
                 </span>
-                <span className="mt-1 text-[10px] text-gray-500 text-center uppercase tracking-wide">
-                  {label}
+                Smart Campus Operations Hub
+              </div>
+
+              <h1
+                data-d="1"
+                className={`hero-in ${heroLoaded ? "hero-in-visible" : ""}
+                           text-4xl sm:text-5xl lg:text-[52px] font-bold leading-[1.1]
+                           tracking-tight text-gray-900 dark:text-white mb-5`}
+              >
+                Manage every{" "}
+                <span className="relative text-orange-500">
+                  campus resource
+                  <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 300 8"
+                       fill="none" preserveAspectRatio="none">
+                    <path d="M2 6 C60 2, 160 2, 298 5" stroke="#f97316"
+                          strokeWidth="2.5" strokeLinecap="round" opacity="0.55"/>
+                  </svg>
+                </span>{" "}
+                in one place
+              </h1>
+
+              <p
+                data-d="2"
+                className={`hero-in ${heroLoaded ? "hero-in-visible" : ""}
+                           text-base sm:text-lg text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg mb-8`}
+              >
+                Assetra unifies facility bookings, asset management, and incident
+                ticketing into one modern platform with full auditability and role-based access.
+              </p>
+
+              <div
+                data-d="3"
+                className={`hero-in ${heroLoaded ? "hero-in-visible" : ""} flex flex-wrap gap-3`}
+              >
+                <Link
+                  to="/facilities"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
+                             bg-orange-500 hover:bg-orange-600
+                             text-white text-sm font-semibold
+                             shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50
+                             hover:scale-[1.03] transition-all duration-200"
+                >
+                  Explore Facilities <IconArrow className="h-4 w-4"/>
+                </Link>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
+                             border border-gray-200 dark:border-white/10
+                             bg-white dark:bg-white/5
+                             text-gray-700 dark:text-gray-200 text-sm font-semibold
+                             hover:bg-gray-50 dark:hover:bg-white/10 hover:scale-[1.03]
+                             transition-all duration-200"
+                >
+                  Sign in with Google
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.83z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                  </svg>
+                </Link>
+              </div>
+
+              {/* Highlight strip — the reference's 3-icon row, themed to Assetra */}
+              <div
+                data-d="4"
+                className={`hero-in ${heroLoaded ? "hero-in-visible" : ""}
+                           mt-10 sm:mt-12 w-full grid grid-cols-1 xs:grid-cols-3 sm:grid-cols-3 gap-3 sm:gap-4`}
+              >
+                {HERO_HIGHLIGHTS.map(({ icon: Icon, label }) => (
+                  <div key={label} className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
+                      <Icon className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                    </span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── spacer column ──
+               The photo itself is absolutely positioned against the section
+               (see CampusPhotoPanel above), so this column just reserves the
+               grid width on desktop; it renders nothing on mobile. */}
+            <div className="hidden lg:block" aria-hidden="true" />
+          </div>
+
+          {/* Stats bar, full width beneath both columns */}
+          <div className="mt-12 sm:mt-16">
+            <div
+              className="w-full grid grid-cols-2 sm:grid-cols-4 gap-px
+                         rounded-2xl overflow-hidden border-2 border-gray-300 dark:border-white/15
+                         bg-gray-300 dark:bg-white/15 transition-colors duration-300"
+            >
+              {STATS.map(({ value, suffix, label }) => (
+                <div key={label}
+                     className="flex flex-col items-center justify-center py-4 px-2
+                                bg-white dark:bg-[#0c0c16] transition-colors duration-300">
+                  <span className="font-bold text-2xl text-gray-900 dark:text-white">
+                    {value}<span className="text-orange-500">{suffix}</span>
+                  </span>
+                  <span className="mt-1 text-[10px] text-gray-500 dark:text-gray-500 text-center uppercase tracking-wide">
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── OVERVIEW ─────────────────────────────────────────────────────── */}
+      {/* Copy on the left, a small grid of three grayscale lecture-hall /
+         auditorium photos plus a stat card on the right — the same photo
+         treatment as the hero, just laid out as a static grid instead of a
+         slideshow. Keeps the checklist limited to capabilities Assetra
+         actually ships (booking conflicts, RBAC, ticket lifecycle). */}
+      <section id="overview" className="py-16 sm:py-20 lg:py-24 bg-white dark:bg-gray-900 transition-colors">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="sr-overview grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+
+            {/* ── copy ── */}
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-widest text-orange-500">
+                Why Assetra
+              </span>
+              <h2 className="mt-2 font-bold text-3xl sm:text-4xl text-gray-900 dark:text-white tracking-tight leading-tight">
+                One login, every campus resource under control
+              </h2>
+              <p className="mt-4 text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg">
+                Assetra replaces scattered spreadsheets and email threads with a
+                single Spring Boot and React platform that connects students,
+                technicians, and administrators — from the moment a lecture
+                hall is booked to the moment a fault ticket is closed.
+              </p>
+
+              <ul className="mt-6 space-y-3">
+                {OVERVIEW_POINTS.map((point) => (
+                  <li key={point} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-orange-500/10">
+                      <IconCheck className="h-3 w-3 text-orange-500" />
+                    </span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{point}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                to="/facilities"
+                className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl
+                           bg-orange-500 hover:bg-orange-600
+                           text-white text-sm font-semibold
+                           shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50
+                           hover:scale-[1.03] transition-all duration-200"
+              >
+                Discover Facilities <IconArrow className="h-4 w-4"/>
+              </Link>
+            </div>
+
+            {/* ── photo grid: 3 grayscale campus photos + 1 stat card ── */}
+            <div className="grid grid-cols-[1.3fr_1fr] grid-rows-2 gap-3 sm:gap-4 h-[380px] sm:h-[440px]">
+              {OVERVIEW_PHOTOS.map(({ src, alt }) => (
+                <div
+                  key={src}
+                  className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800"
+                >
+                  <img
+                    src={src}
+                    alt={alt}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                    style={{ filter: "grayscale(1) contrast(1.05) brightness(1.02)" }}
+                  />
+                </div>
+              ))}
+              <div
+                className="rounded-2xl border border-orange-500/20 bg-orange-500/10
+                           flex flex-col items-center justify-center text-center p-3"
+              >
+                <span className="font-bold text-3xl text-orange-500">3</span>
+                <span className="mt-1 text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-400">
+                  Roles Supported
                 </span>
               </div>
-            ))}
-          </div>
+            </div>
 
+          </div>
         </div>
       </section>
 
       {/* ── FEATURES ─────────────────────────────────────────────────────── */}
-      <section id="features" className="py-20 lg:py-28 bg-white dark:bg-gray-900 transition-colors">
+      <section id="features" className="py-16 sm:py-20 lg:py-28 bg-white dark:bg-gray-900 transition-colors">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <span className="text-xs font-semibold uppercase tracking-widest text-orange-500">
@@ -632,7 +738,7 @@ export default function HomePage() {
             <h2 className="mt-2 font-bold text-3xl sm:text-4xl text-gray-900 dark:text-white tracking-tight">
               Everything your campus needs
             </h2>
-           <p className="mt-2 text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+            <p className="mt-2 text-gray-500 dark:text-gray-400 max-w-md mx-auto">
               Four integrated modules, one seamless platform.
             </p>
           </div>
@@ -664,7 +770,7 @@ export default function HomePage() {
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="py-20 lg:py-28 bg-gray-50 dark:bg-gray-950 transition-colors">
+      <section id="how-it-works" className="py-16 sm:py-20 lg:py-28 bg-gray-50 dark:bg-gray-950 transition-colors">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-xs font-semibold uppercase tracking-widest text-orange-500">
@@ -697,7 +803,7 @@ export default function HomePage() {
       </section>
 
       {/* ── ROLES ────────────────────────────────────────────────────────── */}
-      <section id="roles" className="py-20 lg:py-28 bg-white dark:bg-gray-900 transition-colors">
+      <section id="roles" className="py-16 sm:py-20 lg:py-28 bg-white dark:bg-gray-900 transition-colors">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-xs font-semibold uppercase tracking-widest text-orange-500">
@@ -713,7 +819,7 @@ export default function HomePage() {
                 key={role}
                 className={`sr-role rounded-2xl p-6
                   ${featured
-                    ? "bg-orange-500 shadow-2xl shadow-orange-500/30 scale-[1.02]"
+                    ? "bg-orange-500 shadow-2xl shadow-orange-500/30 md:scale-[1.02]"
                     : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:-translate-y-1 transition-transform duration-300"
                   }`}
               >
@@ -743,12 +849,11 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA BANNER ───────────────────────────────────────────────────── */}
-      <section id="cta" className="py-16 lg:py-20 bg-gray-50 dark:bg-gray-950 transition-colors">
+      <section id="cta" className="py-14 sm:py-16 lg:py-20 bg-gray-50 dark:bg-gray-950 transition-colors">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="sr-cta relative overflow-hidden rounded-3xl
-                          bg-orange-500 px-8 py-16 text-center
+                          bg-orange-500 px-6 sm:px-8 py-14 sm:py-16 text-center
                           shadow-2xl shadow-orange-500/30">
-            {/* Floating orbs */}
             <div className="cta-orb   absolute -top-20  -right-20 w-64 h-64 rounded-full bg-white/10 pointer-events-none"/>
             <div className="cta-orb-2 absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-white/10 pointer-events-none"/>
 
