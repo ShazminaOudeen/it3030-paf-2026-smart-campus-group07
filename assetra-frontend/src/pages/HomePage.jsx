@@ -97,7 +97,17 @@ function IconClock({ className }) {
   );
 }
 
+function IconGitHub({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path fillRule="evenodd" clipRule="evenodd" d="M12 .5C5.73.5.5 5.73.5 12c0 5.09 3.29 9.4 7.86 10.93.57.1.78-.25.78-.55 0-.27-.01-1.16-.02-2.1-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.06 11.06 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.71 5.4-5.29 5.68.42.36.78 1.07.78 2.15 0 1.56-.01 2.81-.01 3.19 0 .3.2.66.79.55A10.52 10.52 0 0 0 23.5 12c0-6.27-5.23-11.5-11.5-11.5Z"/>
+    </svg>
+  );
+}
+
 // ─── data ────────────────────────────────────────────────────────────────────
+
+const TECH_STACK = ["Java", "Spring Boot", "React", "Tailwind CSS", "PostgreSQL", "OAuth 2.0"];
 
 const FEATURES = [
   { icon: IconBuilding, title: "Facilities Catalogue",  desc: "Browse lecture halls, labs, and meeting rooms with real-time availability." },
@@ -140,25 +150,24 @@ const WORKFLOW = [
   { step: "04", title: "Done",    desc: "Attend your session or raise an incident if needed."         },
 ];
 
-const ROLES = [
-  {
-    role: "User",
-    desc: "Browse facilities, request bookings, report incidents, and track their status in real time.",
-    perms: ["Book resources", "Raise tickets", "View notifications", "Add comments"],
-    featured: false,
-  },
-  {
-    role: "Admin",
-    desc: "Full control — approve bookings, manage the facility catalogue, and oversee all tickets.",
-    perms: ["Manage catalogue", "Approve bookings", "Reject with reason", "View all activity"],
-    featured: true,
-  },
-  {
-    role: "Technician",
-    desc: "Assigned to incident tickets — update status, add resolution notes, and close tickets.",
-    perms: ["Update ticket status", "Add resolution notes", "Upload evidence", "Comment on tickets"],
-    featured: false,
-  },
+// Access Control is shown as a real permissions matrix rather than three
+// "pricing tier" cards — it's how RBAC actually gets documented, and it
+// lets someone see at a glance which capability belongs to which role.
+const ROLE_COLUMNS = [
+  { key: "user",       label: "User",       icon: IconUsers  },
+  { key: "admin",      label: "Admin",      icon: IconShield },
+  { key: "technician", label: "Technician", icon: IconTicket },
+];
+
+const CAPABILITIES = [
+  { label: "Book facilities & assets",         access: { user: true,  admin: false, technician: false } },
+  { label: "Raise incident tickets",           access: { user: true,  admin: false, technician: false } },
+  { label: "Comment on tickets",               access: { user: true,  admin: false, technician: true  } },
+  { label: "Approve or reject bookings",       access: { user: false, admin: true,  technician: false } },
+  { label: "Manage the facility catalogue",    access: { user: false, admin: true,  technician: false } },
+  { label: "View all activity across campus",  access: { user: false, admin: true,  technician: false } },
+  { label: "Update ticket status",             access: { user: false, admin: false, technician: true  } },
+  { label: "Add resolution notes & evidence",  access: { user: false, admin: false, technician: true  } },
 ];
 
 // ─── Grayscale campus photo slideshow ─────────────────────────────────────────
@@ -470,29 +479,21 @@ export default function HomePage() {
         }
         .step-num-inner { transition: background 0.3s, border-color 0.3s, transform 0.3s; }
 
-        /* ── role cards ── */
+        /* ── access control matrix (one quiet reveal, not per-row) ── */
         .sr-role {
           opacity: 0;
-          transition: opacity 0.55s ease, transform 0.55s ease;
+          transform: translateY(20px);
+          transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22,1,0.36,1);
         }
-        .sr-role:nth-child(1) { transform: translateX(-28px); transition-delay: 0.00s; }
-        .sr-role:nth-child(2) { transform: translateY(28px);  transition-delay: 0.15s; }
-        .sr-role:nth-child(3) { transform: translateX(28px);  transition-delay: 0.30s; }
-        .sr-role.sr-visible   { opacity: 1; transform: none !important; }
+        .sr-role.sr-visible { opacity: 1; transform: translateY(0); }
 
-        /* ── CTA banner ── */
+        /* ── closing sign-in section (same quiet treatment) ── */
         .sr-cta {
           opacity: 0;
-          transform: scale(0.95);
-          transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
+          transform: translateY(20px);
+          transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22,1,0.36,1);
         }
-        .sr-cta.sr-visible { opacity: 1; transform: scale(1); }
-        @keyframes floatOrb {
-          0%,100% { transform: scale(1);    }
-          50%      { transform: scale(1.15); }
-        }
-        .cta-orb   { animation: floatOrb 6s ease-in-out infinite; }
-        .cta-orb-2 { animation: floatOrb 6s ease-in-out infinite; animation-delay: -3s; }
+        .sr-cta.sr-visible { opacity: 1; transform: translateY(0); }
       `}</style>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
@@ -802,77 +803,124 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── ROLES ────────────────────────────────────────────────────────── */}
+      {/* ── ACCESS CONTROL ───────────────────────────────────────────────── */}
+      {/* A real permissions matrix instead of three "pricing tier" cards —
+         this is how RBAC actually gets documented, and it shows exactly
+         which capability belongs to which role at a glance. */}
       <section id="roles" className="py-16 sm:py-20 lg:py-28 bg-white dark:bg-gray-900 transition-colors">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
             <span className="text-xs font-semibold uppercase tracking-widest text-orange-500">
               Access Control
             </span>
             <h2 className="mt-2 font-bold text-3xl sm:text-4xl text-gray-900 dark:text-white tracking-tight">
-              Built for every role
+              Who can do what
             </h2>
+            <p className="mt-2 text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+              Every account is tied to exactly one role, checked on every request via OAuth 2.0 and Spring Security.
+            </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-            {ROLES.map(({ role, desc, perms, featured }) => (
-              <div
-                key={role}
-                className={`sr-role rounded-2xl p-6
-                  ${featured
-                    ? "bg-orange-500 shadow-2xl shadow-orange-500/30 md:scale-[1.02]"
-                    : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:-translate-y-1 transition-transform duration-300"
-                  }`}
-              >
-                <h3 className={`font-bold text-xl mb-2
-                  ${featured ? "text-white" : "text-gray-900 dark:text-white"}`}>
-                  {role}
-                </h3>
-                <p className={`text-sm leading-relaxed mb-5
-                  ${featured ? "text-orange-100" : "text-gray-500 dark:text-gray-400"}`}>
-                  {desc}
-                </p>
-                <ul className="space-y-2">
-                  {perms.map((p) => (
-                    <li key={p} className="flex items-center gap-2 text-sm">
-                      <IconCheck className={`h-4 w-4 flex-shrink-0
-                        ${featured ? "text-orange-200" : "text-orange-500"}`}/>
-                      <span className={featured ? "text-orange-50" : "text-gray-600 dark:text-gray-300"}>
-                        {p}
-                      </span>
-                    </li>
+
+          <div className="sr-role rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[560px] border-collapse text-sm">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-white/[0.03] border-b border-gray-200 dark:border-gray-800">
+                    <th className="text-left font-medium text-gray-500 dark:text-gray-400 py-4 px-4 sm:px-6">
+                      Capability
+                    </th>
+                    {ROLE_COLUMNS.map(({ key, label, icon: Icon }) => (
+                      <th key={key} className="py-4 px-4 sm:px-6 w-28">
+                        <div className="flex flex-col items-center gap-1.5">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/10">
+                            <Icon className="h-3.5 w-3.5 text-orange-500" />
+                          </span>
+                          <span className="text-xs font-semibold uppercase tracking-wide text-gray-700 dark:text-gray-300">
+                            {label}
+                          </span>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {CAPABILITIES.map(({ label, access }, i) => (
+                    <tr
+                      key={label}
+                      className={`border-b border-gray-100 dark:border-gray-800/60 last:border-b-0
+                        hover:bg-orange-500/[0.03] transition-colors duration-150
+                        ${i % 2 === 1 ? "bg-gray-50/60 dark:bg-white/[0.015]" : ""}`}
+                    >
+                      <td className="py-3.5 px-4 sm:px-6 font-medium text-gray-800 dark:text-gray-200">
+                        {label}
+                      </td>
+                      {ROLE_COLUMNS.map(({ key }) => (
+                        <td key={key} className="py-3.5 px-4 sm:px-6">
+                          <div className="flex items-center justify-center">
+                            {access[key] ? (
+                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-500/10">
+                                <IconCheck className="h-3.5 w-3.5 text-orange-500" />
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 dark:text-gray-700">—</span>
+                            )}
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
                   ))}
-                </ul>
-              </div>
-            ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── CTA BANNER ───────────────────────────────────────────────────── */}
-      <section id="cta" className="py-14 sm:py-16 lg:py-20 bg-gray-50 dark:bg-gray-950 transition-colors">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="sr-cta relative overflow-hidden rounded-3xl
-                          bg-orange-500 px-6 sm:px-8 py-14 sm:py-16 text-center
-                          shadow-2xl shadow-orange-500/30">
-            <div className="cta-orb   absolute -top-20  -right-20 w-64 h-64 rounded-full bg-white/10 pointer-events-none"/>
-            <div className="cta-orb-2 absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-white/10 pointer-events-none"/>
+      {/* ── OPEN SOURCE ──────────────────────────────────────────────────── */}
+      {/* Closes the page with something that isn't a repeat of the hero's
+         sign-in / browse actions: the real tech stack this was built with,
+         and a link to the actual public repo. */}
+      <section
+        id="open-source"
+        className="py-16 sm:py-20 lg:py-24 bg-gray-50 dark:bg-gray-950 transition-colors border-t border-gray-200 dark:border-gray-800"
+      >
+        <div className="sr-cta mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 text-center">
+          <span className="text-xs font-semibold uppercase tracking-widest text-orange-500">
+            Open Source
+          </span>
+          <h2 className="mt-2 font-bold text-3xl sm:text-4xl text-gray-900 dark:text-white tracking-tight mb-3">
+            Built in the open
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg mx-auto mb-6">
+            Assetra is a full-stack student project — a Spring Boot REST API,
+            a React and Tailwind CSS front end, and PostgreSQL underneath.
+            The source is public if you'd like to see how any part of it works.
+          </p>
 
-            <h2 className="relative font-bold text-3xl sm:text-4xl text-white mb-3 tracking-tight">
-              Ready to modernise your campus?
-            </h2>
-            <p className="relative text-orange-100 max-w-md mx-auto mb-8 leading-relaxed">
-              Sign in with your university Google account and get started in seconds. No setup required.
-            </p>
-            <Link
-              to="/login"
-              className="relative inline-flex items-center gap-2 px-7 py-3.5 rounded-xl
-                         bg-white text-orange-600 font-bold text-sm
-                         shadow-lg hover:shadow-xl hover:scale-[1.03]
-                         transition-all duration-200"
-            >
-              Get Started Free <IconArrow className="h-4 w-4"/>
-            </Link>
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+            {TECH_STACK.map((t) => (
+              <span
+                key={t}
+                className="px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-800
+                           bg-white dark:bg-white/5 text-xs font-medium text-gray-600 dark:text-gray-300"
+              >
+                {t}
+              </span>
+            ))}
           </div>
+
+          <a
+            href="https://github.com/ShazminaOudeen/it3030-paf-2026-smart-campus-group07"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
+                       bg-gray-900 hover:bg-black dark:bg-white dark:hover:bg-gray-100
+                       text-white dark:text-gray-900 text-sm font-semibold
+                       shadow-lg hover:scale-[1.03] transition-all duration-200"
+          >
+            <IconGitHub className="h-4 w-4" />
+            View source on GitHub
+          </a>
         </div>
       </section>
 
